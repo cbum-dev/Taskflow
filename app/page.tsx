@@ -1,139 +1,76 @@
 "use client";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import axios from "axios";
 
 export default function Component() {
   const { data: session } = useSession();
+  const [users, setUsers] = useState([]);
+
+  const showUsers = () => {
+    axios.get("http://localhost:3001/api/user/")
+    .then(data => setUsers(data.data))
+    .catch(error => console.log(error))
+  }
+
+  const postUser = async () => {
+    try {
+      if (!session?.user?.email || !session?.user?.name) {
+        console.error('No user session data available');
+        return;
+      }
+      const response = await fetch("http://127.0.0.1:3001/api/user", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: session.user.email,
+          name: session.user.name,
+          imageUrl: session.user.image
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+
+      const data = await response.json();
+      console.log('User created:', data);
+      
+      // Refresh the users list
+      showUsers();
+    } catch (error) {
+      console.error('Error creating user:', error);
+    }
+  }
+
   if (session) {
-    console.log(session);
-    console.log(session.user);
     return (
-      <div>
-        Signed in as {session.user.emai || session.user?.name} <br />
-        {/* Signed in as {session.user} <br /> */}
-        {/* Signed in as {session} <br /> */}
+      <>
+        Signed in as {session.user.email} <br />
+        <Button onClick={showUsers} variant="default">Show Users</Button>
+        <Button onClick={postUser} variant="default">Add Me</Button>
         <button onClick={() => signOut()}>Sign out</button>
-      </div>
+        
+        {users.length > 0 && (
+          <div>
+            <h2>Users:</h2>
+            <ul>
+              {users.map((user: any) => (
+                <li key={user.id}>{user.email}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </>
     );
   }
   return (
-    <div className="">
-      <div className="h-96 w-96 bg-slate-500 overflow-auto no-scrollbar text-nowrap">
-
- <h1 className="text-3xl over">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1> <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1> <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1> <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>
-      </div>
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>{" "}
-      <h1 className="text-3xl">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam odio
-        incidunt impedit quo non vero quasi labore alias similique ipsam!
-        Temporibus iusto, tempore laudantium adipisci molestiae soluta fuga
-        sapiente ratione!
-      </h1>
+    <>
       Not signed in <br />
-      <button onClick={() => signIn("google")}>Sign in with google</button>
-      <button onClick={() => signIn("github")}>Sign in with github</button>
-    </div>
+      <button onClick={() => signIn()}>Sign in</button>
+    </>
   );
 }
