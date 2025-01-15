@@ -1,76 +1,57 @@
-"use client";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import axios from "axios";
+// pages/index.js
+"use client"
+import { useSession, signIn, signOut } from 'next-auth/react';
+import axios from 'axios';
+import { fetchJwtToken } from './utils/fetch-jwt';
 
-export default function Component() {
-  const { data: session } = useSession();
-  const [users, setUsers] = useState([]);
+export default function Home() {
+  const { data: session, status } = useSession();
 
-  const showUsers = () => {
-    axios.get("http://localhost:3001/api/user/")
-    .then(data => setUsers(data.data))
-    .catch(error => console.log(error))
-  }
+  const fetchProtectedData = async () => {
+    if (!session) {
+      alert('Not authenticated');
+      return;
+    }
 
-  const postUser = async () => {
     try {
-      if (!session?.user?.email || !session?.user?.name) {
-        console.error('No user session data available');
-        return;
-      }
-      const response = await fetch("http://127.0.0.1:3001/api/user", {
-        method: 'POST',
+      // Fetch the custom JWT token
+      const jwtToken = await fetchJwtToken();
+
+      // Make the authenticated request to Express backend
+      const res = await axios.get('http://localhost:3001/api/user/', {
         headers: {
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwtToken}`,
         },
-        body: JSON.stringify({
-          email: session.user.email,
-          name: session.user.name,
-          imageUrl: session.user.image
-        })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create user');
-      }
-
-      const data = await response.json();
-      console.log('User created:', data);
-      
-      // Refresh the users list
-      showUsers();
+      console.log('Protected Data:', res.data);
+      alert(JSON.stringify(res.data));
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error fetching protected data:', error.response?.data || error.message);
+      alert('Error fetching protected data');
     }
+  };
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
   }
 
-  if (session) {
-    return (
-      <>
-        Signed in as {session.user.email} <br />
-        <Button onClick={showUsers} variant="default">Show Users</Button>
-        <Button onClick={postUser} variant="default">Add Me</Button>
-        <button onClick={() => signOut()}>Sign out</button>
-        
-        {users.length > 0 && (
-          <div>
-            <h2>Users:</h2>
-            <ul>
-              {users.map((user: any) => (
-                <li key={user.id}>{user.email}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </>
-    );
-  }
   return (
-    <>
-      Not signed in <br />
-      <button onClick={() => signIn()}>Sign in</button>
-    </>
+    <div style={{ padding: '2rem' }}>
+      {session ? (
+        <>
+          <p>Signed in as {session.user.email}</p>
+          <button onClick={() => signOut()} style={{ marginRight: '1rem' }}>
+            Sign out
+          </button>
+          <button onClick={fetchProtectedData}>Fetch Protected Data</button>
+        </>
+      ) : (
+        <>
+          <p>Not signed in</p>
+          <button onClick={() => signIn('google')}>Sign in with Google</button>
+        </>
+      )}
+    </div>
   );
 }
