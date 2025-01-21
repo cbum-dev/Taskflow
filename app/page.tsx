@@ -1,8 +1,7 @@
-// pages/index.js
 "use client"
 import { useSession, signIn, signOut } from 'next-auth/react';
 import axios from 'axios';
-import { fetchJwtToken } from './utils/fetch-jwt';
+import Link from 'next/link';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -14,13 +13,9 @@ export default function Home() {
     }
 
     try {
-      // Fetch the custom JWT token
-      const jwtToken = await fetchJwtToken();
-
-      // Make the authenticated request to Express backend
       const res = await axios.get('http://localhost:3001/api/user/', {
         headers: {
-          Authorization: `Bearer ${jwtToken}`,
+          Authorization: `Bearer ${session.user}`,
         },
       });
 
@@ -44,7 +39,9 @@ export default function Home() {
           <button onClick={() => signOut()} style={{ marginRight: '1rem' }}>
             Sign out
           </button>
-          <button onClick={fetchProtectedData}>Fetch Protected Data</button>
+          <button onClick={fetchProtectedData}>Fetch Protected Data
+          </button>
+          <Link href={"/dashboard"}>hi</Link>
         </>
       ) : (
         <>
