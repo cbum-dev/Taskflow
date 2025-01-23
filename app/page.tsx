@@ -2,10 +2,21 @@
 import { useSession, signIn, signOut } from 'next-auth/react';
 import axios from 'axios';
 import Link from 'next/link';
-
+import { getSession } from "next-auth/react";
 export default function Home() {
   const { data: session, status } = useSession();
-
+  
+  async function fetchUserDetails() {
+    const session = await getSession();
+  
+    if (session) {
+      console.log("User ID:", session.user.id); // User ID from Google
+    } else {
+      console.log("No active session");
+    }
+  }
+  
+  fetchUserDetails();
   const fetchProtectedData = async () => {
     if (!session) {
       alert('Not authenticated');
@@ -15,7 +26,7 @@ export default function Home() {
     try {
       const res = await axios.get('http://localhost:3001/api/user/', {
         headers: {
-          Authorization: `Bearer ${session.user}`,
+          Authorization: `Bearer ${session.user.id}`,
         },
       });
 
@@ -35,7 +46,7 @@ export default function Home() {
     <div style={{ padding: '2rem' }}>
       {session ? (
         <>
-          <p>Signed in as {session.user.email}</p>
+          <p>Signed in as {session.user.email}ashjahsasas{session.user?.id}</p>
           <button onClick={() => signOut()} style={{ marginRight: '1rem' }}>
             Sign out
           </button>

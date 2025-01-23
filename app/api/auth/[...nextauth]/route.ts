@@ -12,8 +12,30 @@ const handler = NextAuth({
     GoogleProvider({
         clientId: process.env.GOOGLE_ID || "",
         clientSecret: process.env.GOOGLE_SECRET || "",
-    }),
+        authorization: {
+          params: {
+            access_type: "offline", 
+            response_type: "code",
+            prompt: "consent", 
+          },
+        }}),
   ],
+  callbacks: {
+    async jwt({ token, account }) {
+      if (account) {
+        token.access_token = account.access_token; 
+      }
+      console.log(token,"token")
+      return token;
+    },
+    async session({ session, token }) {
+      if (token.access_token) {
+        session.access_token = token.access_token; 
+      }
+      return session;
+    },
+  },
+  
 })
 
 export {handler as GET,handler as POST} 

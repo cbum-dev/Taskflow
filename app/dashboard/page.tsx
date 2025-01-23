@@ -20,7 +20,7 @@ function Page() {
   };
 
   useEffect(() => {
-    searchUser(); // Fetch data on component mount
+    searchUser(); 
   }, []);
 
   return (
