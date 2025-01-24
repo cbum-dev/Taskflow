@@ -1,9 +1,26 @@
-import React from 'react'
+"use client";
+import React from "react";
+import LoginButton from "@/components/authComponents/signIn";
+import LogoutButton from "@/components/authComponents/signOut";
+import { useAuthStore } from "@/store/authStore";
 
-function page() {
+function Page() {
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  if (!isAuthenticated)
+    return (
+      <>
+        Please log in.
+        <LoginButton />
+      </>
+    );
   return (
-    <div>page</div>
-  )
+    <div>
+      <h1>Welcome, {user.name}!</h1>
+      <p>Email: {user.email}</p>
+      <LogoutButton />
+    </div>
+  );
 }
 
-export default page
+export default Page;
