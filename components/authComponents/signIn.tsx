@@ -5,11 +5,11 @@ import { Button } from "../ui/button";
 const storeUser = (session, setUser) => {
   if (session) {
     const { id, name, email } = session.user;
-    const accessToken = session.access_token;
+    const access_token = session.access_token;
 
-    console.log("Storing user:", { id, name, email, accessToken });
+    console.log("Storing user:", { id, name, email }, access_token);
 
-    setUser({ id, name, email }, accessToken);
+    setUser({ id, name, email }, access_token);
   } else {
     console.error("No session data available to store");
   }
