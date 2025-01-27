@@ -7,43 +7,89 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import ProjectCard from "@/components/projectComponent/ProjectCard";
 
+type Workspace = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+type Project = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+type Issue = {
+  id: string;
+  title: string;
+  description: string;
+};
+
 function Page() {
   const user = useAuthStore((state) => state.user);
   const access_token = useAuthStore((state) => state.access_token);
-  const [workspace, setWorkspace] = useState([]); 
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [description, setDescription] = useState("");
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
 
   useEffect(() => {
-    const getWorkspace = async () => {
+    const getWorkspaces = async () => {
       try {
-        const { data } = await axios.get("http://localhost:3001/api/workspace/", {
+        const { data } = await axios.get("http://localhost:3001/api/workspace/user", {
           headers: {
             Authorization: `Bearer ${access_token}`,
           },
         });
 
-          setWorkspace(data.data);
+        setWorkspaces(data.data || []);
       } catch (error) {
-        console.error("Error fetching workspace:", error);
+        console.error("Error fetching workspaces:", error);
       }
     };
 
     if (access_token) {
-      getWorkspace();
+      getWorkspaces();
     } else {
       console.warn("Access token is missing");
     }
   }, [access_token]);
 
-  const gotoProject = async (workspaceId:string) => {
-    const getProject = await axios.get(`http://localhost:3001/api/projects/workspace/${workspaceId}`,
-      {headers:{
-        Authorization: `Bearer ${access_token}`
-      }}
-    );
-    console.log(getProject)
-  }
+  const gotoProject = async (workspaceId: string) => {
+    try {
+      const { data } = await axios.get(
+        `http://localhost:3001/api/projects/workspace/${workspaceId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
+
+      setProjects(data.data || []);
+      setIssues([]); 
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
+
+  const showIssues = async (projectId: string) => {
+    try {
+      const { data } = await axios.get(
+        `http://localhost:3001/api/issues/project/${projectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
+
+      setIssues(data.data || []);
+    } catch (error) {
+      console.error("Error fetching issues:", error);
+    }
+  };
 
   const handlePostWorkspace = async () => {
     if (!workspaceName.trim()) {
@@ -62,9 +108,9 @@ function Page() {
         }
       );
 
-      setWorkspace((prev) => (Array.isArray(prev) ? [...prev, data] : [data]));
-      setWorkspaceName(""); 
-      setDescription("");   
+      setWorkspaces((prev) => [...prev, data]);
+      setWorkspaceName("");
+      setDescription("");
       console.log("Workspace posted successfully:", data);
     } catch (error) {
       console.error("Error posting workspace:", error);
@@ -99,17 +145,43 @@ function Page() {
 
           <div className="mt-6">
             <h2>Your Workspaces</h2>
-            {workspace.length > 0 ? (
+            {workspaces.length > 0 ? (
               <div>
-                {workspace.map((item, index) => (
-                  <Card onClick={() => gotoProject(item.id)} key={index} className="mb-4 p-4">
-                    <h3>{item.name}</h3>
-                    <h3>{item.id}</h3>
-                    <ProjectCard projectName={item.name} projectDescription={item.description}/>
-
-                    <p>{item.description}</p>
+                {workspaces.map((workspace) => (
+                  <Card
+                    onClick={() => gotoProject(workspace.id)}
+                    key={workspace.id}
+                    className="mb-4 w-1/4 p-4 cursor-pointer"
+                  >
+                    <h3>{workspace.name}</h3>
+                    <p>{workspace.description}</p>
                   </Card>
                 ))}
+                {projects.length > 0 ? (
+                  projects.map((project) => (
+                    <div key={project.id} className="mt-4">
+                      <ProjectCard
+                        projectName={project.name}
+                        projectDescription={project.description}
+                      />
+                      <Button
+                        onClick={() => showIssues(project.id)}
+                        className="mt-2"
+                      >
+                        Show Issues
+                      </Button>
+                      {issues.length > 0 &&
+                        issues.map((issue) => (
+                          <Card key={issue.id} className="mt-2 w-1/5 p-2">
+                            <h4>{issue.title}</h4>
+                            <p>{issue.description}</p>
+                          </Card>
+                        ))}
+                    </div>
+                  ))
+                ) : (
+                  <p>No projects found.</p>
+                )}
               </div>
             ) : (
               <p>No workspaces found.</p>
