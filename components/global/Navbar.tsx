@@ -12,13 +12,14 @@ import {
 import { Input } from "../ui/input";
 import {
   ChevronDownIcon,
-  BellIcon,
-  HelpCircleIcon,
-  SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuthStore } from '@/store/authStore'
+
 
 function Navbar() {
+    const { user } = useAuthStore()
+
   return (
     <nav className="flex items-center h-14 justify-between px-6 py-3 bg-white border-b shadow-sm">
       <div className="flex items-center space-x-4">
@@ -56,8 +57,8 @@ function Navbar() {
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar>
-              <AvatarImage src="/profile.jpg" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src={user?.image} alt="User" />
+              <AvatarFallback>{user?.name.charAt(0) || "UK"}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
 

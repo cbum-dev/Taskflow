@@ -1,9 +1,8 @@
-import Sidebar from '@/components/global/Sidebar'
 import React from 'react'
-
+import { AppSidebar } from '@/components/global/sidebars'
 function page() {
   return (
-    <div><Sidebar/></div>
+    <div><AppSidebar/></div>
   )
 }
 
