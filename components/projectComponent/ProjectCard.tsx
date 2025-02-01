@@ -7,7 +7,7 @@ function ProjectCard({projectName,projectDescription}:  {projectName: string;
   }) {
   return (
     <div>
-        <Card className='p-6 w-1/4 shadow-none'>
+        <Card  className='p-6 w-1/4 shadow-none'>
             <CardTitle>Project : {projectName}</CardTitle>
             <CardDescription>
                 {projectDescription}

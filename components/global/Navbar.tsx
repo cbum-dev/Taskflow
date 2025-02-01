@@ -24,7 +24,7 @@ function Navbar() {
     <nav className="flex items-center h-14 justify-between px-6 py-3 bg-white border-b shadow-sm">
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-xl font-bold">
-          Jira Clone
+          TaskFlow
         </Link>
 
         <DropdownMenu>
