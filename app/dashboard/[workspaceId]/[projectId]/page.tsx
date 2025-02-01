@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import { io } from 'socket.io-client'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { CheckCircleIcon, FlagIcon, UserIcon, CalendarIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { Calendar } from '@/components/ui/calendar'
+
+const socket = io('http://localhost:3001') // Change to your backend URL
 
 export default function IssuesPage() {
   const { access_token } = useAuthStore()
@@ -33,6 +36,17 @@ export default function IssuesPage() {
       }
     }
     if (access_token && projectId) fetchIssues()
+
+    // Listen for issue updates from WebSocket
+    socket.on('issueUpdated', (updatedIssue) => {
+      setIssues((prevIssues) =>
+        prevIssues.map((issue) => (issue.id === updatedIssue.id ? updatedIssue : issue))
+      )
+    })
+
+    return () => {
+      socket.off('issueUpdated') // Cleanup on unmount
+    }
   }, [access_token, projectId])
 
   const updateIssue = async (issueId, field, value) => {
@@ -40,9 +54,7 @@ export default function IssuesPage() {
       await axios.put(`http://localhost:3001/api/issues/${issueId}`, { [field]: value }, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
-      setIssues((prevIssues) =>
-        prevIssues.map((issue) => (issue.id === issueId ? { ...issue, [field]: value } : issue))
-      )
+      socket.emit('updateIssue', { id: issueId, field, value }) // Notify server
     } catch (error) {
       console.error('Error updating issue:', error);
     }
@@ -132,15 +144,12 @@ export default function IssuesPage() {
                       <CalendarIcon className="w-4 h-4 mr-2" /> {issue.dueDate ? new Date(issue.dueDate).toLocaleString() : "Select Date"}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="p-2">
-                    <Calendar
-                      selected={issue.dueDate ? new Date(issue.dueDate) : null}
-                      onSelect={(date) => {
-                        if (date) {
-                          updateIssue(issue.id, "dueDate", date.toISOString());
-                        }
-                      }}
-                    />
+                  <DropdownMenuContent>
+<Calendar
+  selected={issue.dueDate ? new Date(issue.dueDate) : null}
+  onChange={(date) => updateIssue(issue.id, "dueDate", date.toISOString())}
+/>
+
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -148,7 +157,6 @@ export default function IssuesPage() {
           ))}
         </TableBody>
       </Table>
-
     </div>
   )
 }
