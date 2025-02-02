@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
-import { Card } from '@/components/ui/card';
 import Image from 'next/image';
 
 export default function HomePage() {

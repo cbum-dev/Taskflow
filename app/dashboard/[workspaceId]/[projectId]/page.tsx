@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { CheckCircleIcon, FlagIcon, UserIcon, CalendarIcon } from 'lucide-react'
+import { FlagIcon, UserIcon, CalendarIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { Calendar } from '@/components/ui/calendar'
 

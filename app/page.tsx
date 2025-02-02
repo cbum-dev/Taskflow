@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
 import { useAuthStore } from '@/store/authStore';
 import Image from 'next/image';
 
 export default function HomePage() {
   const user = useAuthStore((state) => state.user);
+  const { data: session, status } = useSession();
   const access_token = useAuthStore((state) => state.access_token);
   const router = useRouter();
   const [workspaces, setWorkspaces] = useState([]);
@@ -40,11 +42,14 @@ export default function HomePage() {
           priority
         />
               </div>
+
       
       <div className="relative z-10 flex flex-col items-center text-center py-16">
         <h1 className="text-7xl font-extrabold mb-4 text-orange-500 ">TaskFlow</h1>
         <p className="text-lg text-gray-300 max-w-2xl">
           Organize your work efficiently with TaskFlow. Create, manage, and track your workspaces and projects seamlessly.
+          {session?.user?.email}kjk
+{session?.expires}
         </p>
         <Button className="mt-6 px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700" onClick={() => router.push('/dashboard')}>Get Started</Button>
       </div>

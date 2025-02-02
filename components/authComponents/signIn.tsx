@@ -51,6 +51,7 @@ function LoginButton() {
   return (
     <div>
       <Button onClick={handleLogin}>Login with Google</Button>
+      
       <Button onClick={handleStoreUser} variant="outline">
         Store in Zustand
       </Button>
