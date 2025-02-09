@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 const storeUser = (session, setUser) => {
   if (session) {
     const { id, name, email,image } = session.user;
-    const access_token = session.access_token;
+    const access_token = session.accessToken;
 
     console.log("Storing user:", { id, name, email,image }, access_token);
 

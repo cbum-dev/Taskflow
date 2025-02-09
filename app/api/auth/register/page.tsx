@@ -19,7 +19,7 @@ export default function RegisterPage() {
     });
 
     if (response.ok) {
-      router.push("api/auth/login");
+      router.push("login");
     } else {
       alert("Error registering user");
     }

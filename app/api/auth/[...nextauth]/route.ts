@@ -21,7 +21,11 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const res = await fetch("http://localhost:3001/api/auth/login", {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Missing email or password");
+        }
+
+        const res = await fetch("http://localhost:3001/api/user/login", {
           method: "POST",
           body: JSON.stringify(credentials),
           headers: { "Content-Type": "application/json" },
@@ -41,25 +45,20 @@ const handler = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.user.id;
-        token.name = user.user.name;
+        token.token = user.token;
         token.email = user.user.email;
-        token.image = user.user.imageUrl;
-        token.accessToken = user.token;
+        token.name = user.user.name;
+        token.image = user.user.image;;
       }
-      console.log('token', token)
+      console.log(token)
       return token;
-      
-
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.name = token.name;
-      session.user.email = token.email;
-      session.user.image = token.image;
-      session.accessToken = token.accessToken;
+      if (token.token) {
+        session.user.id = token.id;
+        session.accessToken = token.token;
 
-
-
+      }
       return session;
     },
   },

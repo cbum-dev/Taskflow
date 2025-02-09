@@ -6,19 +6,21 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
-import { HomeIcon, InboxIcon, MoreHorizontalIcon, PlusIcon, ChevronLeftIcon, FolderIcon, ChevronDownIcon } from 'lucide-react'
+import { PlusIcon, FolderIcon, ChevronDownIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import axios from 'axios'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
+import { Input } from '@/components/ui/input'
 
 export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()
-  const [isCollapsed, setIsCollapsed] = useState(false)
   const { user, access_token } = useAuthStore()
   const [workspaces, setWorkspaces] = useState([])
   const [selectedWorkspace, setSelectedWorkspace] = useState(null)
   const [projects, setProjects] = useState([])
+  const [newWorkspaceName, setNewWorkspaceName] = useState("")
+  const [newProjectName, setNewProjectName] = useState("")
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -29,8 +31,8 @@ export function AppSidebar() {
         })
         setWorkspaces(data.data || [])
 
-        const workspaceIdFromUrl = pathname.split('/')[2] // Extract workspaceId from URL
-        const workspaceFromUrl = data.data.find(w => w.id === workspaceIdFromUrl)
+        const workspaceIdFromUrl = pathname.split('/')[2];
+        const workspaceFromUrl = data.data.find(w => w.id === workspaceIdFromUrl) || data.data[0] // Select first workspace by default
 
         if (workspaceFromUrl) {
           setSelectedWorkspace(workspaceFromUrl)
@@ -50,6 +52,10 @@ export function AppSidebar() {
         headers: { Authorization: `Bearer ${access_token}` }
       })
       setProjects(data.data || [])
+
+      if (data.data.length > 0) {
+        router.push(`/dashboard/${workspaceId}/${data.data[0].id}`) // Auto-select first project
+      }
     } catch (error) {
       console.error("Error fetching projects:", error)
     }
@@ -59,6 +65,38 @@ export function AppSidebar() {
     setSelectedWorkspace(workspace)
     fetchProjects(workspace.id)
     router.push(`/dashboard/${workspace.id}`)
+  }
+
+  const handleAddWorkspace = async () => {
+    if (!newWorkspaceName.trim()) return
+
+    try {
+      const { data } = await axios.post(
+        "http://localhost:3001/api/workspace",
+        { name: newWorkspaceName },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      )
+      setWorkspaces((prev) => [...prev, data])
+      setNewWorkspaceName("")
+    } catch (error) {
+      console.error("Error adding workspace:", error)
+    }
+  }
+
+  const handleAddProject = async () => {
+    if (!newProjectName.trim() || !selectedWorkspace) return
+
+    try {
+      const { data } = await axios.post(
+        "http://localhost:3001/api/projects",
+        { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      )
+      setProjects((prev) => [...prev, data])
+      setNewProjectName("")
+    } catch (error) {
+      console.error("Error adding project:", error)
+    }
   }
 
   return (
@@ -81,13 +119,28 @@ export function AppSidebar() {
                     {workspace.name}
                   </DropdownMenuItem>
                 ))}
+                <Separator />
+                <div className="p-2">
+                  <Input
+                    type="text"
+                    placeholder="New Workspace"
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
+                    className="mb-2"
+                  />
+                  <Button variant="primary" className="w-full" onClick={handleAddWorkspace}>
+                    <PlusIcon className="w-4 h-4 mr-2" /> Add Workspace
+                  </Button>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
         {selectedWorkspace && (
           <div className="flex-1 p-4 overflow-hidden">
-            <div className="text-sm font-medium text-gray-500 mb-2">Projects in {selectedWorkspace.name}</div>
+            <div className="text-sm font-medium text-gray-500 mb-2">
+              Projects in {selectedWorkspace.name}
+            </div>
             <nav className="space-y-2">
               {projects.map((project) => (
                 <Button key={project.id} variant="ghost" className="w-full justify-start" onClick={() => router.push(`/dashboard/${selectedWorkspace.id}/${project.id}`)}>
@@ -95,6 +148,18 @@ export function AppSidebar() {
                 </Button>
               ))}
             </nav>
+            <div className="mt-4">
+              <Input
+                type="text"
+                placeholder="New Project"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                className="mb-2"
+              />
+              <Button variant="primary" className="w-full" onClick={handleAddProject}>
+                <PlusIcon className="w-4 h-4 mr-2" /> Add Project
+              </Button>
+            </div>
           </div>
         )}
         <div className="p-4 border-t flex items-center justify-between">
@@ -105,7 +170,3 @@ export function AppSidebar() {
     </Sidebar>
   )
 }
-
-
-"ya29.a0AXeO80QbDY2TC-VVXrX5U4lwcLO6iuwRRfG7hBGpUPfvADfPyXRczrITUPIuF2N9L2hJ4DZdjkXa8kMuLzwrPxFJqdWeVgI6EBOlY-U7W5hY1gMKWylveDs9DMmnC6OIirJk4GW1my9AwreZ6F68XFoGkQnH2UyeCTozHJataCgYKAcsSARESFQHGX2MioeWjAXs3sp73YkD3w7MNSw0175"
-"ya29.a0AXeO80Tlkgjbatdii0tgGxaEQCobaU19arhdmDb6H1yUx_xc82lVSpxx8_OdRstjOYjh4ixjqjdQZvO3MUGhGh70hXEYvqj25wpFExS29-Xvaqi7F64dlh5taj2ubYNn1GHQDkY2yNRfvXNQcv6okM9ArxxTzewcEZoX93l5aCgYKAZgSARESFQHGX2MipgtsDVlNptNwXgGtxU0W3Q0175"
