@@ -4,25 +4,23 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { io } from 'socket.io-client'
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { FlagIcon, UserIcon, CalendarIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { PlusIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import { Calendar } from '@/components/ui/calendar'
+import KanbanBoard from '@/components/KanbanBoard'
+import IssuesTable from '@/components/IssuesTable'
 
-const socket = io('http://localhost:3001') // Change to your backend URL
+const socket = io('http://localhost:3001')
 
 export default function IssuesPage() {
-  const { access_token } = useAuthStore()
+  const { access_token, user } = useAuthStore()
   const { projectId } = useParams()
   const [issues, setIssues] = useState([])
   const [search, setSearch] = useState('')
-  const [statuses] = useState(["TODO", "IN_PROGRESS", "IN_REVIEW", "HOLD_STAGE", "COMPLETE"]);
-  const [priorities] = useState(["LOW", "MEDIUM", "HIGH", "URGENT"]);
-  const [assignees, setAssignees] = useState([]);
+  const [newIssue, setNewIssue] = useState({ title: '', description: '', priority: 'MEDIUM', status: 'TODO' })
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -37,7 +35,6 @@ export default function IssuesPage() {
     }
     if (access_token && projectId) fetchIssues()
 
-    // Listen for issue updates from WebSocket
     socket.on('issueUpdated', (updatedIssue) => {
       setIssues((prevIssues) =>
         prevIssues.map((issue) => (issue.id === updatedIssue.id ? updatedIssue : issue))
@@ -45,118 +42,72 @@ export default function IssuesPage() {
     })
 
     return () => {
-      socket.off('issueUpdated') // Cleanup on unmount
+      socket.off('issueUpdated')
     }
   }, [access_token, projectId])
 
-  const updateIssue = async (issueId, field, value) => {
+  const handleCreateIssue = async () => {
+    if (!newIssue.title.trim()) return
     try {
-      await axios.put(`http://localhost:3001/api/issues/${issueId}`, { [field]: value }, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
-      socket.emit('updateIssue', { id: issueId, field, value }) // Notify server
+      const { data } = await axios.post(
+        'http://localhost:3001/api/issues',
+        { ...newIssue, projectId, reporterId: user?.id },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      )
+      setIssues((prev) => [data, ...prev])
+      socket.emit('newIssue', data)
+      setNewIssue({ title: '', description: '', priority: 'MEDIUM', status: 'TODO', reporterId: user?.id })
+      setIsModalOpen(false)
     } catch (error) {
-      console.error('Error updating issue:', error);
+      console.error('Error creating issue:', error)
     }
-  };
+  }
 
   return (
     <div className="p-6 space-y-4">
+      <KanbanBoard issues={issues} />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Project Issues</h1>
-        <Input
-          type="text"
-          placeholder="Search issues..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3"
-        />
+        <div className="flex space-x-2">
+          <Input
+            type="text"
+            placeholder="Search issues..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-1/3"
+          />
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="primary">
+                <PlusIcon className="w-4 h-4 mr-2" /> Add Issue
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Issue</DialogTitle>
+              </DialogHeader>
+              <Input
+                type="text"
+                placeholder="Issue Title"
+                value={newIssue.title}
+                onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
+                className="mb-2"
+              />
+              <Input
+                type="text"
+                placeholder="Issue Description"
+                value={newIssue.description}
+                onChange={(e) => setNewIssue({ ...newIssue, description: e.target.value })}
+                className="mb-2"
+              />
+              <Button onClick={handleCreateIssue} className="w-full mt-4">
+                Create Issue
+              </Button>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Assignee</TableHead>
-            <TableHead>Due Date</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {issues.filter(issue => issue.title.toLowerCase().includes(search.toLowerCase())).map(issue => (
-            <TableRow key={issue.id}>
-              <TableCell>{issue.title}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Badge>{issue.status || "Select Status"}</Badge>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {statuses.map((status) => (
-                      <DropdownMenuItem key={status} onClick={() => updateIssue(issue.id, "status", status)}>
-                        {status}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <FlagIcon className="w-4 h-4 mr-2" /> {issue.priority || "Select Priority"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {priorities.map((priority) => (
-                      <DropdownMenuItem key={priority} onClick={() => updateIssue(issue.id, "priority", priority)}>
-                        {priority}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <UserIcon className="w-4 h-4 mr-2" /> {issue.assignee || "Assign User"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {assignees.map((assignee) => (
-                      <DropdownMenuItem key={assignee.id} onClick={() => updateIssue(issue.id, "assignee", assignee.name)}>
-                        {assignee.name}
-                      </DropdownMenuItem>
-                    ))}
-                    <DropdownMenuItem>
-                      <Button variant="ghost" className="w-full">Send Invite</Button>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <CalendarIcon className="w-4 h-4 mr-2" /> {issue.dueDate ? new Date(issue.dueDate).toLocaleString() : "Select Date"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-<Calendar
-  selected={issue.dueDate ? new Date(issue.dueDate) : null}
-  onChange={(date) => updateIssue(issue.id, "dueDate", date.toISOString())}
-/>
-
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <IssuesTable issues={issues} search={search} />
     </div>
   )
 }

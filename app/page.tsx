@@ -9,8 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import Image from 'next/image';
 
 export default function HomePage() {
-  const user = useAuthStore((state) => state.user);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const access_token = useAuthStore((state) => state.access_token);
   const router = useRouter();
   const [workspaces, setWorkspaces] = useState([]);

@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/store/authStore";
 import { signOut } from "next-auth/react";
 import { Button } from "../ui/button";
-import { signIn, getSession } from "next-auth/react";
+import {  getSession } from "next-auth/react";
 
 function LogoutButton() {
   const clearUser = useAuthStore((state) => state.clearUser);

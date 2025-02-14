@@ -1,6 +1,5 @@
 import React from 'react'
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '../ui/card'
-import { Button } from '../ui/button'
+import { Card, CardDescription, CardTitle } from '../ui/card'
 
 function ProjectCard({projectName,projectDescription}:  {projectName: string;
     projectDescription: string;

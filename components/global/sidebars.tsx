@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -21,6 +21,22 @@ export function AppSidebar() {
   const [projects, setProjects] = useState([])
   const [newWorkspaceName, setNewWorkspaceName] = useState("")
   const [newProjectName, setNewProjectName] = useState("")
+
+  const fetchProjects = useCallback(async (workspaceId: string) => {
+    if (!access_token) return
+    try {
+      const { data } = await axios.get(`http://localhost:3001/api/projects/workspace/${workspaceId}`, {
+        headers: { Authorization: `Bearer ${access_token}` }
+      })
+      setProjects(data.data || [])
+
+      if (data.data.length > 0) {
+        router.push(`/dashboard/${workspaceId}/${data.data[0].id}`)
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error)
+    }
+  }, [access_token, router])
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -43,23 +59,7 @@ export function AppSidebar() {
       }
     }
     fetchWorkspaces()
-  }, [access_token, pathname])
-
-  const fetchProjects = async (workspaceId) => {
-    if (!access_token) return
-    try {
-      const { data } = await axios.get(`http://localhost:3001/api/projects/workspace/${workspaceId}`, {
-        headers: { Authorization: `Bearer ${access_token}` }
-      })
-      setProjects(data.data || [])
-
-      if (data.data.length > 0) {
-        router.push(`/dashboard/${workspaceId}/${data.data[0].id}`) // Auto-select first project
-      }
-    } catch (error) {
-      console.error("Error fetching projects:", error)
-    }
-  }
+  }, [access_token, pathname, fetchProjects])
 
   const handleWorkspaceSelect = (workspace) => {
     setSelectedWorkspace(workspace)
