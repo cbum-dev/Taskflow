@@ -5,9 +5,9 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { FlagIcon, UserIcon } from 'lucide-react'
+import { FlagIcon, UserIcon,TrashIcon } from 'lucide-react'
 
-export default function IssuesTable({ issues, search }) {
+export default function IssuesTable({ issues, search,deleteIssue }) {
   const statuses = ["TODO", "IN_PROGRESS", "IN_REVIEW", "HOLD_STAGE", "COMPLETE"]
   const priorities = ["LOW", "MEDIUM", "HIGH", "URGENT"]
 
@@ -63,6 +63,10 @@ export default function IssuesTable({ issues, search }) {
                     </Button>
                   </DropdownMenuTrigger>
                 </DropdownMenu>
+                <Button variant="destructive" onClick={() => deleteIssue && deleteIssue(issue.id)}>
+  <TrashIcon className="w-4 h-4" />
+</Button>
+
               </TableCell>
             </TableRow>
           ))}

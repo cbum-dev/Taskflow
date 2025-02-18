@@ -8,7 +8,7 @@ import { SortableContext } from '@dnd-kit/sortable'
 import { useAuthStore } from '@/store/authStore'
 import KanbanColumn from './KanbanColumn'
 
-const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "HOLD_STAGE", "COMPLETE"];
+const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
 
 export default function KanbanBoard() {
   const { access_token } = useAuthStore()

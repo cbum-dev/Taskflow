@@ -46,6 +46,21 @@ export default function IssuesPage() {
     }
   }, [access_token, projectId])
 
+  const deleteIssue = async (issueId) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/issues/${issueId}`,
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+
+        }
+        
+      );
+      setIssues((prevIssues) => prevIssues.filter(issue => issue.id !== issueId));
+    } catch (error) {
+      console.error('Error deleting issue:', error);
+    }
+  };
+  
   const handleCreateIssue = async () => {
     if (!newIssue.title.trim()) return
     try {
@@ -107,7 +122,7 @@ export default function IssuesPage() {
           </Dialog>
         </div>
       </div>
-      <IssuesTable issues={issues} search={search} />
+      <IssuesTable issues={issues} search={search} deleteIssue={deleteIssue} />
     </div>
   )
 }
