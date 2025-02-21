@@ -1,26 +1,27 @@
 'use client'
 
-import React,{ useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import axios from 'axios'
+import { io } from 'socket.io-client'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { FlagIcon, CalendarIcon, UserIcon,TrashIcon } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
-import { useParams } from 'next/navigation'
-import { io } from 'socket.io-client'
-import { Calendar } from '@/components/ui/calendar'
 import { Input } from '@/components/ui/input'
-import axios from 'axios'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { FlagIcon, UserIcon, CalendarIcon } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+import { Calendar } from '@/components/ui/calendar'
 
 const socket = io('http://localhost:3001') // Change to your backend URL
 
-
-export default function IssuesTable({ issues, search,deleteIssue,setIssues }) {
-  const statuses = ["TODO", "IN_PROGRESS", "IN_REVIEW", "HOLD_STAGE", "COMPLETE"]
-  const priorities = ["LOW", "MEDIUM", "HIGH", "URGENT"]
+export default function IssuesPage() {
   const { access_token } = useAuthStore()
   const { projectId } = useParams()
+  const [issues, setIssues] = useState([])
+  const [search, setSearch] = useState('')
+  const [statuses] = useState(["TODO", "IN_PROGRESS", "IN_REVIEW", "HOLD_STAGE", "COMPLETE"]);
+  const [priorities] = useState(["LOW", "MEDIUM", "HIGH", "URGENT"]);
   const [assignees, setAssignees] = useState([]);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function IssuesTable({ issues, search,deleteIssue,setIssues }) {
   };
 
   return (
-<div className="p-6 space-y-4">
+    <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Project Issues</h1>
         <Input

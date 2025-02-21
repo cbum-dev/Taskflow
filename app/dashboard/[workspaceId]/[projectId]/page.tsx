@@ -122,7 +122,7 @@ export default function IssuesPage() {
           </Dialog>
         </div>
       </div>
-      <IssuesTable issues={issues} search={search} deleteIssue={deleteIssue} />
+      <IssuesTable issues={issues} setIssues={setIssues}  search={search} deleteIssue={deleteIssue} />
     </div>
   )
 }
