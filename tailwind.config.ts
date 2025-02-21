@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import type { PluginAPI } from "tailwindcss/types/config";
+import animate from "tailwindcss-animate";
 
 export default {
     darkMode: ["class"],
@@ -90,18 +92,18 @@ export default {
   		}
   	}
   },
-  plugins: [    function ({ addUtilities }) {
-    const newUtilities = {
-      ".no-scrollbar::-webkit-scrollbar": {
-        display: "none",
-      },
-      ".no-scrollbar": {
-        "-ms-overflow-style": "none",
-        "scrollbar-width": "none",
-      },
-    };
-    addUtilities(newUtilities);
-  },
-      require("tailwindcss-animate")
-],
+  plugins: [
+    function(api: PluginAPI) {
+      api.addUtilities({
+        ".no-scrollbar::-webkit-scrollbar": {
+          display: "none",
+        },
+        ".no-scrollbar": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+        },
+      });
+    },
+    animate
+  ],
 } satisfies Config;

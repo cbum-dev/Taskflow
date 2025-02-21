@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 export type CalendarProps = {
   selected: Date | null
-  onChange: (date: Date) => void
+  onChange: (date: Date | null) => void
   className?: string
 }
 

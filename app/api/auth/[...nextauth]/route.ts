@@ -1,7 +1,24 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+
+// Extend the built-in session type
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    accessToken?: string;
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+
+  interface User {
+    id: string;
+    token: string;
+    email: string;
+    name: string;
+  }
+}
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
@@ -44,20 +61,15 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.user.id;
-        token.token = user.token;
-        token.email = user.user.email;
-        token.name = user.user.name;
-        token.image = user.user.image;;
+        token.id = user.id;
+        token.accessToken = user.token;
       }
-      console.log(token)
       return token;
     },
     async session({ session, token }) {
-      if (token.token) {
-        session.user.id = token.id;
-        session.accessToken = token.token;
-
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.accessToken = token.accessToken as string;
       }
       return session;
     },

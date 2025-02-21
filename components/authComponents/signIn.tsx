@@ -1,17 +1,23 @@
 import { useAuthStore } from "@/store/authStore";
 import { signIn, getSession } from "next-auth/react";
+import { Session } from "next-auth";
 import { Button } from "../ui/button";
 
-const storeUser = (session, setUser) => {
-  if (session) {
-    const { id, name, email,image } = session.user;
+type SetUserFn = (user: { id: string; name: string; email: string; image?: string }, token: string) => void;
+
+const storeUser = (session: Session, setUser: SetUserFn) => {
+  if (session?.user?.id && session?.user?.name && session?.user?.email && session?.accessToken) {
+    const { id, name, email, image } = session.user;
     const access_token = session.accessToken;
 
-    console.log("Storing user:", { id, name, email,image }, access_token);
-
-    setUser({ id, name, email,image }, access_token);
+    setUser({ 
+      id: id as string,
+      name: name as string,
+      email: email as string,
+      image: image || undefined 
+    }, access_token);
   } else {
-    console.error("No session data available to store");
+    console.error("Missing required session data");
   }
 };
 
@@ -28,8 +34,12 @@ function LoginButton() {
       } else {
         console.error("Login failed or was cancelled by the user");
       }
-    } catch (error) {
-      console.error("Error during login:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error during login:", error.message);
+      } else {
+        console.error("Unknown error during login");
+      }
     }
   };
 
@@ -43,8 +53,12 @@ function LoginButton() {
       } else {
         console.error("No session data available to store");
       }
-    } catch (error) {
-      console.error("Error fetching session data:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error fetching session data:", error.message);
+      } else {
+        console.error("Unknown error fetching session");
+      }
     }
   };
 

@@ -3,17 +3,27 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
-import { DndContext, closestCorners } from '@dnd-kit/core'
+import { DndContext, closestCorners, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useAuthStore } from '@/store/authStore'
 import KanbanColumn from './KanbanColumn'
+import { io } from 'socket.io-client'
 
 const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
+const socket = io('http://localhost:3001')
+
+interface Issue {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+}
 
 export default function KanbanBoard() {
   const { access_token } = useAuthStore()
   const { projectId } = useParams()
-  const [issues, setIssues] = useState([])
+  const [issues, setIssues] = useState<Issue[]>([])
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -27,6 +37,16 @@ export default function KanbanBoard() {
       }
     };
     if (access_token && projectId) fetchIssues();
+
+    socket.on('issueUpdated', (updatedIssue: Issue) => {
+      setIssues((prevIssues: Issue[]) =>
+        prevIssues.map((issue) => (issue.id === updatedIssue.id ? updatedIssue : issue))
+      );
+    });
+
+    return () => {
+      socket.off('issueUpdated') 
+    }
   }, [access_token, projectId]);
 
   const updateIssueStatus = async (issueId: string, newStatus: string) => {
@@ -37,17 +57,29 @@ export default function KanbanBoard() {
       setIssues((prevIssues) =>
         prevIssues.map((issue) => (issue.id === issueId ? { ...issue, status: newStatus } : issue))
       );
+      socket.emit('updateIssue',{id: issueId,newStatus})
     } catch (error) {
       console.error('Error updating issue status:', error);
     }
   };
 
-  const onDragEnd = (event) => {
+  const handleDeleteIssue = async (issueId: string) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/issues/${issueId}`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      setIssues(prevIssues => prevIssues.filter(issue => issue.id !== issueId));
+    } catch (error) {
+      console.error('Error deleting issue:', error);
+    }
+  };
+
+  const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
-    const draggedIssueId = active.id;
-    const newStatus = over.id; 
+    const draggedIssueId = String(active.id);
+    const newStatus = String(over.id);
 
     updateIssueStatus(draggedIssueId, newStatus);
   };
@@ -57,7 +89,12 @@ export default function KanbanBoard() {
       <div className="flex space-x-4 overflow-x-auto p-4">
         {STATUSES.map((status) => (
           <SortableContext key={status} items={issues.filter(issue => issue.status === status)}>
-            <KanbanColumn key={status} status={status} issues={issues.filter(issue => issue.status === status)} />
+            <KanbanColumn 
+              key={status} 
+              status={status} 
+              issues={issues.filter(issue => issue.status === status)}
+              onDeleteIssue={handleDeleteIssue}
+            />
           </SortableContext>
         ))}
       </div>

@@ -9,7 +9,19 @@ import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 import { useParams } from 'next/navigation'
 
-export default function CreateIssueForm({ onIssueCreated }) {
+interface Issue {
+  id: string;
+  title: string;
+  description?: string;
+  priority: string;
+  status: string;
+}
+
+interface CreateIssueFormProps {
+  onIssueCreated: (issue: Issue) => void;
+}
+
+export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps) {
   const { access_token, user } = useAuthStore()
   const { projectId } = useParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -39,7 +51,7 @@ export default function CreateIssueForm({ onIssueCreated }) {
   return (
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <DialogTrigger asChild>
-        <Button variant="primary" disabled={loading}>
+        <Button variant="default" disabled={loading}>
           <PlusIcon className="w-4 h-4 mr-2" /> {loading ? 'Adding...' : 'Add Issue'}
         </Button>
       </DialogTrigger>

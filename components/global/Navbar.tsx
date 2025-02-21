@@ -21,7 +21,7 @@ function Navbar() {
     const { user } = useAuthStore()
 
   return (
-    <nav className="flex items-center h-14 justify-between px-6 py-3 bg-white border-b shadow-sm">
+    <nav className="flex items-center h-14 justify-between px-6 py-3 border-b shadow-sm">
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-xl font-bold">
           TaskFlow
@@ -57,7 +57,7 @@ function Navbar() {
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar>
-              <AvatarImage src={user?.image} alt="User" />
+              <AvatarImage src={user?.id} alt="User" />
               <AvatarFallback>{user?.name.charAt(0) || "UK"}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>

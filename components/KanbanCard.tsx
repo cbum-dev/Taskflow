@@ -4,9 +4,24 @@ import React, { useEffect, useRef, useState } from "react"
 import { useDraggable } from "@dnd-kit/core"
 import { MoreVertical, Trash2, Calendar, User, Flag } from "lucide-react"
 
-export default function KanbanCard({ issue, onDelete }) {
+interface Issue {
+  id: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  status: string;
+  createdAt?: string;
+  assignees?: string;
+}
+
+interface KanbanCardProps {
+  issue: Issue;
+  onDelete: (id: string) => void;
+}
+
+export default function KanbanCard({ issue, onDelete }: KanbanCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: issue.id,
@@ -25,13 +40,13 @@ export default function KanbanCard({ issue, onDelete }) {
     return () => document.removeEventListener("mousedown", handleOutsideClick)
   }, [showMenu])
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString: string | undefined): string => {
     if (!dateString) return ""
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
-  const getPriorityColor = (priority?: string) => {
+  const getPriorityColor = (priority: string | undefined): string => {
     switch (priority?.toLowerCase()) {
       case "high":
         return "bg-red-500"
@@ -49,7 +64,8 @@ export default function KanbanCard({ issue, onDelete }) {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className="p-4 bg-white rounded-md shadow-sm hover:shadow-md transition-shadow duration-200 cursor-grab relative border border-gray-200"
+      className="p-4 rounded-md shadow-sm hover:shadow-md transition-shadow duration-200 cursor-grab relative border border-gray-200 bg-white text-gray-800 
+      dark:bg-neutral-800 dark:border-gray-700 dark:text-gray-200"
       style={{
         transform: transform
           ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
@@ -62,15 +78,15 @@ export default function KanbanCard({ issue, onDelete }) {
             e.stopPropagation()
             setShowMenu((prev) => !prev)
           }}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
         >
-          <MoreVertical size={16} className="text-gray-500" />
+          <MoreVertical size={16} className="text-gray-500 dark:text-gray-400" />
         </button>
 
         {showMenu && (
           <div
             ref={menuRef}
-            className="absolute right-0 mt-1 w-32 bg-white shadow-lg rounded-md overflow-hidden z-50 border border-gray-200"
+            className="absolute right-0 mt-1 w-32 shadow-lg rounded-md overflow-hidden z-50 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
           >
             <button
               onClick={(e) => {
@@ -78,7 +94,7 @@ export default function KanbanCard({ issue, onDelete }) {
                 if (onDelete) onDelete(issue.id)
                 setShowMenu(false)
               }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 transition-colors flex items-center text-red-600"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 dark:hover:bg-red-900 transition-colors flex items-center text-red-600 dark:text-red-400"
             >
               <Trash2 size={14} className="mr-2" />
               Delete
@@ -87,12 +103,12 @@ export default function KanbanCard({ issue, onDelete }) {
         )}
       </div>
 
-      <div className=" mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 line-clamp-2">
           {issue.title}
         </h3>
         {issue.description && (
-          <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
             {issue.description}
           </p>
         )}
@@ -100,7 +116,7 @@ export default function KanbanCard({ issue, onDelete }) {
 
       <div className="flex flex-col gap-1.5">
         {issue.priority && (
-          <div className="flex items-center text-xs text-gray-600">
+          <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
             <Flag size={12} className="mr-1.5" />
             <span
               className={`w-2 h-2 rounded-full mr-1.5 ${getPriorityColor(
@@ -112,14 +128,14 @@ export default function KanbanCard({ issue, onDelete }) {
         )}
 
         {issue.createdAt && (
-          <div className="flex items-center text-xs text-gray-600">
+          <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
             <Calendar size={12} className="mr-1.5" />
             {formatDate(issue.createdAt)}
           </div>
         )}
 
         {issue.assignees && (
-          <div className="flex items-center text-xs text-gray-600">
+          <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
             <User size={12} className="mr-1.5" />
             <span className="truncate">{issue.assignees}</span>
           </div>

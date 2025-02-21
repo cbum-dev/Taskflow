@@ -12,13 +12,25 @@ import axios from 'axios'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
 
+interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  workspaceId: string;
+}
+
 export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const { user, access_token } = useAuthStore()
-  const [workspaces, setWorkspaces] = useState([])
-  const [selectedWorkspace, setSelectedWorkspace] = useState(null)
-  const [projects, setProjects] = useState([])
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null)
+  const [projects, setProjects] = useState<Project[]>([])
   const [newWorkspaceName, setNewWorkspaceName] = useState("")
   const [newProjectName, setNewProjectName] = useState("")
 
@@ -48,7 +60,7 @@ export function AppSidebar() {
         setWorkspaces(data.data || [])
 
         const workspaceIdFromUrl = pathname.split('/')[2];
-        const workspaceFromUrl = data.data.find(w => w.id === workspaceIdFromUrl) || data.data[0] // Select first workspace by default
+        const workspaceFromUrl = data.data.find((w: Workspace) => w.id === workspaceIdFromUrl) || data.data[0];
 
         if (workspaceFromUrl) {
           setSelectedWorkspace(workspaceFromUrl)
@@ -61,7 +73,7 @@ export function AppSidebar() {
     fetchWorkspaces()
   }, [access_token, pathname, fetchProjects])
 
-  const handleWorkspaceSelect = (workspace) => {
+  const handleWorkspaceSelect = (workspace: Workspace) => {
     setSelectedWorkspace(workspace)
     fetchProjects(workspace.id)
     router.push(`/dashboard/${workspace.id}`)
@@ -107,7 +119,7 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center space-x-2">
                 <Avatar>
-                  <AvatarImage src={user.image} alt={user.name} />
+                  <AvatarImage src={user.id} alt={user.name} />
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium">{user.name}</span>
@@ -128,7 +140,7 @@ export function AppSidebar() {
                     onChange={(e) => setNewWorkspaceName(e.target.value)}
                     className="mb-2"
                   />
-                  <Button variant="primary" className="w-full" onClick={handleAddWorkspace}>
+                  <Button variant="default" className="w-full" onClick={handleAddWorkspace}>
                     <PlusIcon className="w-4 h-4 mr-2" /> Add Workspace
                   </Button>
                 </div>
@@ -156,7 +168,7 @@ export function AppSidebar() {
                 onChange={(e) => setNewProjectName(e.target.value)}
                 className="mb-2"
               />
-              <Button variant="primary" className="w-full" onClick={handleAddProject}>
+              <Button variant="default" className="w-full" onClick={handleAddProject}>
                 <PlusIcon className="w-4 h-4 mr-2" /> Add Project
               </Button>
             </div>

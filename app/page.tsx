@@ -8,11 +8,17 @@ import { useSession } from 'next-auth/react';
 import { useAuthStore } from '@/store/authStore';
 import Image from 'next/image';
 
+interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export default function HomePage() {
   const { data: session } = useSession();
   const access_token = useAuthStore((state) => state.access_token);
   const router = useRouter();
-  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -31,7 +37,7 @@ export default function HomePage() {
   }, [access_token]);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black text-white">
+    <div className="relative max-h-[calc(100vh-56px)] min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black text-white">
       <div className="absolute inset-0 z-0 overflow-hidden">
       <Image 
           src="/dot1.svg" 
