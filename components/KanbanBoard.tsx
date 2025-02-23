@@ -10,7 +10,7 @@ import KanbanColumn from './KanbanColumn'
 import { io } from 'socket.io-client'
 
 const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
-const socket = io('http://localhost:3001')
+const socket = io('https://json-schema-lint-zzda.vercel.app')
 
 interface Issue {
   id: string;
@@ -28,7 +28,7 @@ export default function KanbanBoard() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:3001/api/issues/project/${projectId}`, {
+        const { data } = await axios.get(`https://json-schema-lint-zzda.vercel.app/api/issues/project/${projectId}`, {
           headers: { Authorization: `Bearer ${access_token}` },
         });
         setIssues(data.data || []);
@@ -51,7 +51,7 @@ export default function KanbanBoard() {
 
   const updateIssueStatus = async (issueId: string, newStatus: string) => {
     try {
-      await axios.put(`http://localhost:3001/api/issues/${issueId}`, { status: newStatus }, {
+      await axios.put(`https://json-schema-lint-zzda.vercel.app/api/issues/${issueId}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setIssues((prevIssues) =>
@@ -65,7 +65,7 @@ export default function KanbanBoard() {
 
   const handleDeleteIssue = async (issueId: string) => {
     try {
-      await axios.delete(`http://localhost:3001/api/issues/${issueId}`, {
+      await axios.delete(`https://json-schema-lint-zzda.vercel.app/api/issues/${issueId}`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setIssues(prevIssues => prevIssues.filter(issue => issue.id !== issueId));

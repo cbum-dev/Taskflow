@@ -23,7 +23,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const { data } = await axios.get('http://localhost:3001/api/workspace/user', {
+        const { data } = await axios.get('https://json-schema-lint-zzda.vercel.app/api/workspace/user', {
           headers: {
             Authorization: `Bearer ${access_token}`,
           },

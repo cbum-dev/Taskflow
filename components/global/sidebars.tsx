@@ -37,7 +37,7 @@ export function AppSidebar() {
   const fetchProjects = useCallback(async (workspaceId: string) => {
     if (!access_token) return
     try {
-      const { data } = await axios.get(`http://localhost:3001/api/projects/workspace/${workspaceId}`, {
+      const { data } = await axios.get(`https://json-schema-lint-zzda.vercel.app/api/projects/workspace/${workspaceId}`, {
         headers: { Authorization: `Bearer ${access_token}` }
       })
       setProjects(data.data || [])
@@ -54,7 +54,7 @@ export function AppSidebar() {
     const fetchWorkspaces = async () => {
       if (!access_token) return
       try {
-        const { data } = await axios.get("http://localhost:3001/api/workspace/user", {
+        const { data } = await axios.get("https://json-schema-lint-zzda.vercel.app/api/workspace/user", {
           headers: { Authorization: `Bearer ${access_token}` }
         })
         setWorkspaces(data.data || [])
@@ -84,7 +84,7 @@ export function AppSidebar() {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:3001/api/workspace",
+        "https://json-schema-lint-zzda.vercel.app/api/workspace",
         { name: newWorkspaceName },
         { headers: { Authorization: `Bearer ${access_token}` } }
       )
@@ -100,7 +100,7 @@ export function AppSidebar() {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:3001/api/projects",
+        "https://json-schema-lint-zzda.vercel.app/api/projects",
         { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
       )

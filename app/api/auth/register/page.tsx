@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const registerUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:3001/api/user/register", {
+    const response = await fetch("https://json-schema-lint-zzda.vercel.app/api/user/register", {
       method: "POST",
       body: JSON.stringify({ email, password, name }),
       headers: { "Content-Type": "application/json" },

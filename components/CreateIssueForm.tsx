@@ -33,7 +33,7 @@ export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps
     setLoading(true)
     try {
       const { data } = await axios.post(
-        'http://localhost:3001/api/issues',
+        'https://json-schema-lint-zzda.vercel.app/api/issues',
         { ...newIssue, projectId, reporterId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
       )

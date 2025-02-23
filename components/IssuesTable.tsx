@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { Issue } from '@/types/issue';
 
-const socket = io("http://localhost:3001");
+const socket = io("https://json-schema-lint-zzda.vercel.app");
 
 interface Assignee {
   id: string;
@@ -66,7 +66,7 @@ export default function IssuesTable({
     const fetchIssues = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:3001/api/issues/project/${projectId}`,
+          `https://json-schema-lint-zzda.vercel.app/api/issues/project/${projectId}`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -98,7 +98,7 @@ export default function IssuesTable({
   ) => {
     try {
       await axios.put(
-        `http://localhost:3001/api/issues/${issueId}`,
+        `https://json-schema-lint-zzda.vercel.app/api/issues/${issueId}`,
         { [field]: value },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );

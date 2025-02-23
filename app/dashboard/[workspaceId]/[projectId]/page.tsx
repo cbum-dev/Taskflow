@@ -14,7 +14,7 @@ import KanbanBoard from '@/components/KanbanBoard'
 import IssuesTable from '@/components/IssuesTable'
 import { Issue } from '@/types/issue'
 
-const socket = io('http://localhost:3001') // Connect to WebSocket server
+const socket = io('https://json-schema-lint-zzda.vercel.app') // Connect to WebSocket server
 
 export default function IssuesPage() {
   const { access_token, user } = useAuthStore()
@@ -27,7 +27,7 @@ export default function IssuesPage() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:3001/api/issues/project/${projectId}`, {
+        const { data } = await axios.get(`https://json-schema-lint-zzda.vercel.app/api/issues/project/${projectId}`, {
           headers: { Authorization: `Bearer ${access_token}` },
         })
         setIssues(data.data || [])
@@ -49,7 +49,7 @@ export default function IssuesPage() {
 
   // const deleteIssue = async (issueId:string) => {
   //   try {
-  //     await axios.delete(`http://localhost:3001/api/issues/${issueId}`, {
+  //     await axios.delete(`https://json-schema-lint-zzda.vercel.app/api/issues/${issueId}`, {
   //       headers: { Authorization: `Bearer ${access_token}` },
   //     })
   //     setIssues((prevIssues) => prevIssues.filter(issue => issue.id !== issueId))
@@ -62,7 +62,7 @@ export default function IssuesPage() {
     if (!newIssue.title.trim()) return
     try {
       const { data } = await axios.post(
-        'http://localhost:3001/api/issues',
+        'https://json-schema-lint-zzda.vercel.app/api/issues',
         { ...newIssue, projectId, reporterId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
       )
