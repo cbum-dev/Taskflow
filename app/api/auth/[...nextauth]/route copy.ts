@@ -1,35 +1,9 @@
-import NextAuth, { NextAuthOptions, DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
-// Define a type for the authenticated user
-interface AuthUser {
-  id: string;
-  token: string;
-  email: string;
-  name: string;
-  image?: string;
-}
-
-// Extend the built-in session and user types
-declare module "next-auth" {
-  interface User {
-    id: string;
-    token: string;
-    email: string;
-    name: string;
-    image?: string;
-  }
-
-  interface Session extends DefaultSession {
-    accessToken?: string;
-    user: User & DefaultSession["user"];
-  }
-}
-
-// Define NextAuth options
-const authOptions: NextAuthOptions = {
+const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GithubProvider({
@@ -46,12 +20,12 @@ const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email", placeholder: "you@example.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials): Promise<AuthUser | null> {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Missing email or password");
         }
 
-        const res = await fetch("https://json-schema-lint-zzda.vercel.app/api/user/login", {
+        const res = await fetch("http://localhost:3001/api/user/login", {
           method: "POST",
           body: JSON.stringify(credentials),
           headers: { "Content-Type": "application/json" },
@@ -63,40 +37,33 @@ const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        return {
-          id: user.user.id,
-          token: user.token,
-          email: user.user.email,
-          name: user.user.name,
-          image: user.user.image,
-        };
+        return user;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.user.id;
         token.token = user.token;
-        token.email = user.email;
-        token.name = user.name;
-        token.image = user.image;
+        token.email = user.user.email;
+        token.name = user.user.name;
+        token.image = user.user.image;;
       }
-      console.log("JWT Token:", token);
+      console.log(token)
       return token;
     },
     async session({ session, token }) {
       if (token.token) {
-        session.user.id = token.id as string;
-        session.accessToken = token.token as string;
+        session.user.id = token.id;
+        session.accessToken = token.token;
+
       }
       return session;
     },
   },
   session: { strategy: "jwt" },
   pages: { signIn: "/auth/login" },
-};
+});
 
-// Export as NextAuth handler
-const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
