@@ -60,22 +60,29 @@ function Navbar() {
         <div className="hidden sm:flex">
           <Input placeholder="Search" className="w-64 sm:w-60" />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Avatar>
-              <AvatarImage src={user?.image || ""} alt="User" />
-              <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
+        {user ? (
+  <DropdownMenu>
+    <DropdownMenuTrigger>
+      <Avatar>
+        <AvatarImage src={user?.image || ""} alt="User" />
+        <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+      </Avatar>
+    </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="text-red-500">
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem>Profile</DropdownMenuItem>
+      <DropdownMenuItem>Settings</DropdownMenuItem>
+      <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+        Logout
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+) : (
+  <Button variant="default">
+  <Link href="/api/auth/login">Login</Link>  </Button>
+)}
+
+        
       </div>
     </nav>
   );
