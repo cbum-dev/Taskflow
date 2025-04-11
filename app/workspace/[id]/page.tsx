@@ -9,7 +9,7 @@ import AddMemberForm from "@/components/AddMemberForm";
 import InviteLink from "@/components/InviteLink";
 
 export default function WorkspaceDetails() {
-  const { id } = useParams(); // Get workspace ID from URL
+  const { id } = useParams(); // Get workspace ID from UR
   const { user,access_token } = useAuthStore();
   const [workspace, setWorkspace] = useState(null);
   const [members, setMembers] = useState([]);

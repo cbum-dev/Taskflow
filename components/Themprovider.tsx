@@ -28,9 +28,9 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
       {children}
       <button
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="fixed bottom-4 right-4 p-2 bg-gray-200 dark:bg-gray-800 rounded-md"
+        className="fixed bottom-4 right-4 p-2 bg-neutral-800 dark:bg-neutral-800 border dark:border-neutral-400 border-black rounded-md"
       >
-        {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
+        {theme === "dark" ? "☀️" : "🌙"}
       </button>
     </div>
   );
