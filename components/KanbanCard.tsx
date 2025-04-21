@@ -130,7 +130,7 @@ export default function KanbanCard({ issue, onDelete }: KanbanCardProps) {
         {issue.createdAt && (
           <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
             <Calendar size={12} className="mr-1.5" />
-            {formatDate(issue.createdAt)}
+            {formatDate(issue.dueDate)}
           </div>
         )}
 

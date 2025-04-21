@@ -12,7 +12,7 @@ export default function HomePage() {
           src="/dot1.svg" 
           alt="Background Dots"
           fill
-          className="animate-pulse opacity-10 object-cover"
+          className="animate-pulse opacity-100 object-cover"
           priority
         />
       </div>

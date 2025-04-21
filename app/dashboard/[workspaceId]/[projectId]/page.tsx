@@ -53,7 +53,8 @@ export default function IssuesPage() {
         const { data } = await axios.get(`http://localhost:3001/api/workspace/${workspaceId}/members`, {
           headers: { Authorization: `Bearer ${access_token}` },
         })
-        setWorkspaceMembers(data.data || []) // Store fetched members
+        setWorkspaceMembers(data.data || [])
+        console.log(data)
       } catch (error) {
         console.error('Error fetching workspace members:', error)
       }
@@ -71,20 +72,34 @@ export default function IssuesPage() {
   }, [access_token, projectId, workspaceId])
 
   const handleCreateIssue = async () => {
-    if (!newIssue.title.trim()) return
+    if (!newIssue.title.trim()) return;
+    
     try {
       const { data } = await axios.post(
         'http://localhost:3001/api/issues',
         { ...newIssue, projectId, reporterId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
-      )
-      socket.emit("newIssue", data) // Emit new issue event to the server
-      setIsModalOpen(false)
-      setNewIssue({ title: '', description: '', priority: 'MEDIUM', status: 'TODO', assignee: '', dueDate: null })
+      );
+
+      // Optimistically update the UI immediately
+      setIssues(prevIssues => [data, ...prevIssues]);
+
+      // Reset form and close modal
+      setIsModalOpen(false);
+      setNewIssue({ 
+        title: '', 
+        description: '', 
+        priority: 'MEDIUM', 
+        status: 'TODO', 
+        assigneeId: '', 
+        dueDate: null 
+      });
+
     } catch (error) {
-      console.error('Error creating issue:', error)
+      console.error('Error creating issue:', error);
+      // Optionally show error to user
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-4">
@@ -122,7 +137,6 @@ export default function IssuesPage() {
                   onChange={(e) => setNewIssue({ ...newIssue, description: e.target.value })}
                   className="mb-2"
                 />
-                {/* Assignee Selection from Workspace Members */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="mb-2">
@@ -185,7 +199,6 @@ export default function IssuesPage() {
           <KanbanBoard issues={issues} />
         </TabsContent>
 
-        {/* Issues Table Tab */}
         <TabsContent value="table">
           <IssuesTable 
             issues={issues} 

@@ -23,6 +23,7 @@ import {
   UserIcon,
   ArrowRight,
   SearchIcon,
+  PlusIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useParams } from "next/navigation";
@@ -32,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { Issue } from "@/types/issue";
 import Link from "next/link";
-
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 const socket = io("http://localhost:3001");
 
 interface Assignee {
@@ -61,7 +62,16 @@ export default function IssuesTable({
     "COMPLETE",
   ];
   const priorities = ["LOW", "MEDIUM", "HIGH", "URGENT"];
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newIssue, setNewIssue] = useState({
+    title: '',
+    description: '',
+    priority: 'MEDIUM',
+    status: 'TODO',
+    assigneeId: '',
+    dueDate: null as Date | null,
+  });
+
   const statusColors: Record<string, string> = {
     TODO: "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100",
     IN_PROGRESS: "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100",
@@ -81,6 +91,49 @@ export default function IssuesTable({
   const { projectId, workspaceId } = useParams();
   const [workspaceMembers, setWorkspaceMembers] = useState<{ id: string; name: string }[]>([]);
   const assignees: Assignee[] = workspaceMembers;
+  
+  const handleCreateIssue = async () => {
+    if (!newIssue.title.trim()) return;
+    
+    try {
+      const { data } = await axios.post(
+        'http://localhost:3001/api/issues',
+        { 
+          ...newIssue, 
+          projectId, 
+          reporterId: useAuthStore.getState().user?.id 
+        },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+
+      // Make sure the returned data has all the expected properties
+      const formattedIssue = {
+        ...data,
+        status: data.status || 'TODO',
+        priority: data.priority || 'MEDIUM',
+        title: data.title || '',
+        description: data.description || '',
+        assignee: data.assignee || null,
+        dueDate: data.dueDate || null
+      };
+
+      // Update the UI with properly formatted issue
+      setIssues(prev => [formattedIssue, ...prev]);
+      
+      // Close modal and reset form
+      setIsModalOpen(false);
+      setNewIssue({ 
+        title: '', 
+        description: '', 
+        priority: 'MEDIUM', 
+        status: 'TODO', 
+        assigneeId: '', 
+        dueDate: null 
+      });
+    } catch (error) {
+      console.error('Error creating issue:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -91,7 +144,15 @@ export default function IssuesTable({
             headers: { Authorization: `Bearer ${access_token}` },
           }
         );
-        setIssues(data.data || []);
+        // Make sure all issues have the required properties
+        const formattedIssues = (data.data || []).map((issue: any) => ({
+          ...issue,
+          status: issue.status || 'TODO',
+          priority: issue.priority || 'MEDIUM',
+          title: issue.title || '',
+          description: issue.description || '',
+        }));
+        setIssues(formattedIssues);
       } catch (error) {
         console.error("Error fetching issues:", error);
       }
@@ -128,7 +189,7 @@ export default function IssuesTable({
 
   const updateIssue = async (
     issueId: string,
-    field: "status" | "priority" | "assignee" | "dueDate",
+    field: "status" | "priority" | "assigneeId" | "dueDate",
     value: string
   ) => {
     try {
@@ -143,6 +204,19 @@ export default function IssuesTable({
     }
   };
 
+  // Safe method to format status
+  const formatStatus = (status: any): string => {
+    if (typeof status === 'string') {
+      return status.split('_').join(' ');
+    }
+    return "Select Status";
+  };
+
+  // Filter issues safely checking for title property
+  const filteredIssues = issues.filter((issue) => 
+    typeof issue.title === 'string' && issue.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -152,18 +226,157 @@ export default function IssuesTable({
             Track and manage all project issues in one place
           </p>
         </div>
-        <div className="relative w-full md:w-1/3">
-          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search issues..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 w-full"
-          />
+        
+        <div className="flex items-center gap-4">
+          <div className="relative w-full md:w-64">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search issues..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+          
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusIcon className="w-4 h-4 mr-2" />
+                New Issue
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Issue</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Title
+                  </label>
+                  <Input
+                    placeholder="Issue title"
+                    value={newIssue.title}
+                    onChange={(e) => setNewIssue({...newIssue, title: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Description
+                  </label>
+                  <Input
+                    placeholder="Issue description"
+                    value={newIssue.description}
+                    onChange={(e) => setNewIssue({...newIssue, description: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Status
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        {newIssue.status.split('_').join(' ')}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {statuses.map((status) => (
+                        <DropdownMenuItem
+                          key={status}
+                          onClick={() => setNewIssue({...newIssue, status})}
+                        >
+                          {status.split('_').join(' ')}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Priority
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <FlagIcon className="w-4 h-4 mr-2" />
+                        {newIssue.priority}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {priorities.map((priority) => (
+                        <DropdownMenuItem
+                          key={priority}
+                          onClick={() => setNewIssue({...newIssue, priority})}
+                        >
+                          {priority}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Assignee
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <UserIcon className="w-4 h-4 mr-2" />
+                        {workspaceMembers.find(m => m.id === newIssue.assigneeId)?.name || 'Unassigned'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {workspaceMembers.map((member) => (
+                        <DropdownMenuItem
+                          key={member.id}
+                          onClick={() => setNewIssue({...newIssue, assigneeId: member.id})}
+                        >
+                          {member.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Due Date
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        {newIssue.dueDate ? newIssue.dueDate.toLocaleDateString() : 'No date'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <Calendar
+                        mode="single"
+                        selected={newIssue.dueDate || undefined}
+                        onSelect={(date) => date && setNewIssue({...newIssue, dueDate: date})}
+                      />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <Button 
+                  onClick={handleCreateIssue}
+                  className="w-full mt-4"
+                >
+                  Create Issue
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-
       <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <Table className="min-w-full">
           <TableHeader className="bg-gray-50 dark:bg-gray-800">
@@ -176,130 +389,126 @@ export default function IssuesTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {issues
-              .filter((issue) =>
-                issue.title.toLowerCase().includes(search.toLowerCase())
-              )
-              .map((issue) => (
-                <TableRow key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <TableCell className="font-medium">
-                    <Link 
-                      href={`/issues/${issue.id}`}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                    >
-                      {issue.title}
-                    </Link>
-                  </TableCell>
+            {filteredIssues.map((issue) => (
+              <TableRow key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <TableCell className="font-medium">
+                  <Link 
+                    href={`/issues/${issue.id}`}
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    {issue.title || "Untitled Issue"}
+                  </Link>
+                </TableCell>
 
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Badge
-                          className={`${statusColors[issue.status]} cursor-pointer transition-colors`}
-                          variant="outline"
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Badge
+                        className={`${statusColors[issue.status] || statusColors.TODO} cursor-pointer transition-colors`}
+                        variant="outline"
+                      >
+                        {formatStatus(issue.status)}
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="min-w-[120px]">
+                      {statuses.map((status) => (
+                        <DropdownMenuItem
+                          key={status}
+                          onClick={() => updateIssue(issue.id, "status", status)}
+                          className="capitalize"
                         >
-                          {issue.status.split("_").join(" ") || "Select Status"}
-                        </Badge>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="min-w-[120px]">
-                        {statuses.map((status) => (
-                          <DropdownMenuItem
-                            key={status}
-                            onClick={() => updateIssue(issue.id, "status", status)}
-                            className="capitalize"
-                          >
-                            {status.split("_").join(" ").toLowerCase()}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Badge
-                          className={`${priorityColors[issue.priority]} py-1 cursor-pointer transition-colors`}
-                          variant="outline"
-                        >
-                          <FlagIcon className="w-3 h-3 mr-1.5" />
-                          {issue.priority || "Select Priority"}
-                        </Badge>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="min-w-[120px]">
-                        {priorities.map((priority) => (
-                          <DropdownMenuItem
-                            key={priority}
-                            onClick={() => updateIssue(issue.id, "priority", priority)}
-                          >
-                            {priority}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex items-center gap-2"
-                        >
-                          <UserIcon className="w-4 h-4" />
-                          <span>{issue.assignee?.name || "Unassigned"}</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="max-h-60 overflow-y-auto">
-                        {assignees.map((assignee) => (
-                          <DropdownMenuItem
-                            key={assignee.id}
-                            onClick={() => updateIssue(issue.id, "assigneeId", assignee.id)}
-                          >
-                            {assignee.name}
-                          </DropdownMenuItem>
-                        ))}
-                        <DropdownMenuItem>
-                          <Button variant="ghost" className="w-full">
-                            Invite New Member
-                          </Button>
+                          {status.split("_").join(" ").toLowerCase()}
                         </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
 
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4" />
-                          <span>
-                            {issue.dueDate
-                              ? new Date(issue.dueDate).toLocaleDateString()
-                              : "Set date"}
-                          </span>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Badge
+                        className={`${priorityColors[issue.priority] || priorityColors.MEDIUM} py-1 cursor-pointer transition-colors`}
+                        variant="outline"
+                      >
+                        <FlagIcon className="w-3 h-3 mr-1.5" />
+                        {issue.priority || "MEDIUM"}
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="min-w-[120px]">
+                      {priorities.map((priority) => (
+                        <DropdownMenuItem
+                          key={priority}
+                          onClick={() => updateIssue(issue.id, "priority", priority)}
+                        >
+                          {priority}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-2"
+                      >
+                        <UserIcon className="w-4 h-4" />
+                        <span>{issue.assignee?.name || "Unassigned"}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-h-60 overflow-y-auto">
+                      {assignees.map((assignee) => (
+                        <DropdownMenuItem
+                          key={assignee.id}
+                          onClick={() => updateIssue(issue.id, "assigneeId", assignee.id)}
+                        >
+                          {assignee.name}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuItem>
+                        <Button variant="ghost" className="w-full">
+                          Invite New Member
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <Calendar
-                          mode="single"
-                          selected={issue.dueDate ? new Date(issue.dueDate) : undefined}
-                          onSelect={(date) =>
-                            date && updateIssue(issue.id, "dueDate", date.toISOString())
-                          }
-                          className="rounded-md border"
-                        />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>
+                          {issue.dueDate
+                            ? new Date(issue.dueDate).toLocaleDateString()
+                            : "Set date"}
+                        </span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <Calendar
+                        mode="single"
+                        selected={issue.dueDate ? new Date(issue.dueDate) : undefined}
+                        onSelect={(date) =>
+                          date && updateIssue(issue.id, "dueDate", date.toISOString())
+                        }
+                        className="rounded-md border"
+                      />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
 
-      {issues.length === 0 && (
+      {filteredIssues.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-full mb-4">
             <FlagIcon className="w-8 h-8 text-gray-400" />

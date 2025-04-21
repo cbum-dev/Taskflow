@@ -57,7 +57,7 @@ export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Issue</DialogTitle>
+          <DialogTitle>Create New Issues</DialogTitle>
         </DialogHeader>
         <Input
           type="text"
@@ -74,7 +74,7 @@ export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps
           className="mb-2"
         />
         <Button onClick={handleCreateIssue} className="w-full mt-4" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Issue'}
+          {loading ? 'Creating...' : 'Create Issues'}
         </Button>
       </DialogContent>
     </Dialog>
