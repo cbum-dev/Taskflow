@@ -21,7 +21,6 @@ import {
   FlagIcon,
   CalendarIcon,
   UserIcon,
-  ArrowRight,
   SearchIcon,
   PlusIcon,
 } from "lucide-react";
@@ -167,6 +166,10 @@ export default function IssuesTable({
       );
     });
 
+    socket.on("issueCreated", (newIssue: Issue) => {
+      setIssues((prevIssues) => [newIssue, ...prevIssues]);
+    });
+
     const fetchWorkspaceMembers = async () => {
       try {
         const { data } = await axios.get(
@@ -184,6 +187,7 @@ export default function IssuesTable({
 
     return () => {
       socket.off("issueUpdated");
+      socket.off("issueCreated");
     };
   }, [access_token, projectId, setIssues, workspaceId]);
 
@@ -390,7 +394,10 @@ export default function IssuesTable({
           </TableHeader>
           <TableBody>
             {filteredIssues.map((issue) => (
-              <TableRow key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow 
+                key={issue.id || `issue-${Math.random()}`} 
+                className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
                 <TableCell className="font-medium">
                   <Link 
                     href={`/issues/${issue.id}`}

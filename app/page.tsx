@@ -40,7 +40,7 @@ export default function HomePage() {
   }, [access_token]);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white transition-colors duration-300">
+    <div className="relative h-[100vh-56px] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white transition-colors duration-300">
       
       {/* Background elements */}
       <div className="absolute inset-0 z-0 overflow-hidden">
