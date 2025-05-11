@@ -16,16 +16,20 @@ import KanbanBoard from '@/components/KanbanBoard'
 import IssuesTable from '@/components/IssuesTable'
 import { Issue } from '@/types/issue'
 
-const socket = io('http://localhost:3001') // Connect to WebSocket server
+const socket = io('http://localhost:3001')
 
 export default function IssuesPage() {
   const { access_token, user } = useAuthStore()
   const { projectId, workspaceId } = useParams()
   const router = useRouter()
   const [issues, setIssues] = useState<Issue[]>([])
-  const [workspaceMembers, setWorkspaceMembers] = useState<{ id: string; name: string }[]>([]) // Store workspace members
+  const [workspaceMembers, setWorkspaceMembers] = useState<{ id: string; name: string }[]>([])
   const [search, setSearch] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const [newIssue, setNewIssue] = useState({
     title: '',
@@ -36,57 +40,76 @@ export default function IssuesPage() {
     dueDate: null as Date | null,
   })
 
+  const fetchIssues = async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:3001/api/issues/project/${projectId}`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+      setIssues(data.data || [])
+    } catch (error) {
+      console.error('Error fetching issues:', error)
+    }
+  }
+
+  const fetchWorkspaceMembers = async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:3001/api/workspace/${workspaceId}/members`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+      setWorkspaceMembers(data.data || [])
+    } catch (error) {
+      console.error('Error fetching workspace members:', error)
+    }
+  }
+
   useEffect(() => {
-    const fetchIssues = async () => {
-      try {
-        const { data } = await axios.get(`http://localhost:3001/api/issues/project/${projectId}`, {
-          headers: { Authorization: `Bearer ${access_token}` },
-        })
-        setIssues(data.data || [])
-      } catch (error) {
-        console.error('Error fetching issues:', error)
-      }
+    if (access_token && projectId) {
+      fetchIssues()
+      fetchWorkspaceMembers()
     }
-    if (access_token && projectId) fetchIssues()
 
-    const fetchWorkspaceMembers = async () => {
-      try {
-        const { data } = await axios.get(`http://localhost:3001/api/workspace/${workspaceId}/members`, {
-          headers: { Authorization: `Bearer ${access_token}` },
-        })
-        setWorkspaceMembers(data.data || [])
-        console.log(data)
-      } catch (error) {
-        console.error('Error fetching workspace members:', error)
-      }
-    }
-    if (access_token && workspaceId) fetchWorkspaceMembers()
-
-    // Listen for real-time issue updates
     socket.on("issueCreated", (newIssue) => {
-      setIssues((prevIssues) => [newIssue, ...prevIssues])
+      setIssues(prev => [newIssue, ...prev])
+      setRefreshKey(prev => prev + 1) // Trigger refresh
+    })
+
+    socket.on("issueUpdated", (updatedIssue) => {
+      setIssues(prev => prev.map(issue => 
+        issue.id === updatedIssue.id ? updatedIssue : issue
+      ))
+    })
+
+    socket.on("issueDeleted", (deletedId) => {
+      setIssues(prev => prev.filter(issue => issue.id !== deletedId))
     })
 
     return () => {
-      socket.off("issueCreated") // Cleanup listener on unmount
+      socket.off("issueCreated")
+      socket.off("issueUpdated")
+      socket.off("issueDeleted")
     }
   }, [access_token, projectId, workspaceId])
 
   const handleCreateIssue = async () => {
-    if (!newIssue.title.trim()) return;
+    if (!newIssue.title.trim()) return
     
+    setIsCreating(true)
+    setError('')
+    setSuccess(false)
+
     try {
       const { data } = await axios.post(
         'http://localhost:3001/api/issues',
         { ...newIssue, projectId, reporterId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
-      );
+      )
 
-      // Optimistically update the UI immediately
-      setIssues(prevIssues => [data, ...prevIssues]);
+      // Update state and force KanbanBoard refresh
+      setIssues(prev => [data, ...prev])
+      setRefreshKey(prev => prev + 1)
+      socket.emit("issueCreated", data)
 
-      // Reset form and close modal
-      setIsModalOpen(false);
+      setIsModalOpen(false)
       setNewIssue({ 
         title: '', 
         description: '', 
@@ -94,16 +117,15 @@ export default function IssuesPage() {
         status: 'TODO', 
         assigneeId: '', 
         dueDate: null 
-      });
-
-      // Refresh the page to show updated data
-      router.refresh();
-
+      })
+      setSuccess(true)
     } catch (error) {
-      console.error('Error creating issue:', error);
-      // Optionally show error to user
+      console.error('Error creating issue:', error)
+      setError('Failed to create issue. Please try again.')
+    } finally {
+      setIsCreating(false)
     }
-  };
+  }
 
   return (
     <div className="p-6 space-y-4">
@@ -126,6 +148,9 @@ export default function IssuesPage() {
                   <DialogTitle>Create New Issue</DialogTitle>
                 </DialogHeader>
                 
+                {error && <div className="text-red-500 mb-2">{error}</div>}
+                {success && <div className="text-green-500 mb-2">Issue created successfully!</div>}
+                
                 <Input
                   type="text"
                   placeholder="Issue Title"
@@ -144,7 +169,9 @@ export default function IssuesPage() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="mb-2">
                       <UserIcon className="w-4 h-4 mr-2" />
-                      {newIssue.assigneeId || "Assign User"}
+                      {newIssue.assigneeId 
+                        ? workspaceMembers.find(m => m.id === newIssue.assigneeId)?.name 
+                        : "Assign User"}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
@@ -163,12 +190,14 @@ export default function IssuesPage() {
                     <Button variant="outline" className="mb-2">
                       <FlagIcon className="w-4 h-4 mr-2" />
                       {newIssue.priority}
-
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {["LOW", "MEDIUM", "HIGH", "URGENT"].map((priority) => (
-                      <DropdownMenuItem key={priority} onClick={() => setNewIssue({ ...newIssue, priority })}>
+                      <DropdownMenuItem 
+                        key={priority} 
+                        onClick={() => setNewIssue({ ...newIssue, priority })}
+                      >
                         {priority}
                       </DropdownMenuItem>
                     ))}
@@ -191,13 +220,17 @@ export default function IssuesPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button onClick={()=> router.refresh()} className="w-full mt-4">
-                  Create Issuesss
+                <Button 
+                  onClick={handleCreateIssue} 
+                  className="w-full mt-4"
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create Issue"}
                 </Button>
               </DialogContent>
             </Dialog>
           </div>
-          <KanbanBoard issues={issues} />
+          <KanbanBoard key={refreshKey} issues={issues} />
         </TabsContent>
 
         <TabsContent value="table">
