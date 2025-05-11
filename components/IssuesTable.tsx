@@ -34,6 +34,7 @@ import axios from "axios";
 import { Issue } from "@/types/issue";
 import Link from "next/link";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 const socket = io("http://localhost:3001");
 
 interface Assignee {
@@ -72,6 +73,8 @@ export default function IssuesTable({
     assigneeId: '',
     dueDate: null as Date | null,
   });
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isCreating, setIsCreating] = useState(false);
 
   const statusColors: Record<string, string> = {
     TODO: "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100",
@@ -96,6 +99,7 @@ export default function IssuesTable({
   const handleCreateIssue = async () => {
     if (!newIssue.title.trim()) return;
     
+    setIsCreating(true);
     try {
       const { data } = await axios.post(
         'http://localhost:3001/api/issues',
@@ -116,8 +120,14 @@ export default function IssuesTable({
         assignee: data.assignee || null,
         dueDate: data.dueDate || null
       };
+      
+      // Update local state
       setIssues(prev => [formattedIssue, ...prev]);
       
+      // Force component refresh
+      setRefreshKey(prev => prev + 1);
+      
+      // Close modal and reset form
       setIsModalOpen(false);
       setNewIssue({ 
         title: '', 
@@ -128,10 +138,12 @@ export default function IssuesTable({
         dueDate: null 
       });
       
-      // Add page refresh after creating issue, similar to first code
-      router.refresh();
+      // Notify via WebSocket
+      socket.emit("issueCreated", formattedIssue);
     } catch (error) {
       console.error('Error creating issue:', error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -144,7 +156,6 @@ export default function IssuesTable({
             headers: { Authorization: `Bearer ${access_token}` },
           }
         );
-        // Make sure all issues have the required properties
         const formattedIssues = (data.data || []).map((issue: any) => ({
           ...issue,
           status: issue.status || 'TODO',
@@ -190,7 +201,7 @@ export default function IssuesTable({
       socket.off("issueUpdated");
       socket.off("issueCreated");
     };
-  }, [access_token, projectId, setIssues, workspaceId]);
+  }, [access_token, projectId, setIssues, workspaceId, refreshKey]);
 
   const updateIssue = async (
     issueId: string,
@@ -209,7 +220,6 @@ export default function IssuesTable({
     }
   };
 
-  // Safe method to format status
   const formatStatus = (status: any): string => {
     if (typeof status === 'string') {
       return status.split('_').join(' ');
@@ -217,13 +227,12 @@ export default function IssuesTable({
     return "Select Status";
   };
 
-  // Filter issues safely checking for title property
   const filteredIssues = issues.filter((issue) => 
     typeof issue.title === 'string' && issue.title.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div key={refreshKey} className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Project Issues</h1>
@@ -374,8 +383,9 @@ export default function IssuesTable({
                 <Button 
                   onClick={handleCreateIssue}
                   className="w-full mt-4"
+                  disabled={isCreating}
                 >
-                  Create Issue
+                  {isCreating ? "Creating..." : "Create Issue"}
                 </Button>
               </div>
             </DialogContent>
