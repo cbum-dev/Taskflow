@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -62,6 +63,7 @@ export default function IssuesTable({
   ];
   const priorities = ["LOW", "MEDIUM", "HIGH", "URGENT"];
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
   const [newIssue, setNewIssue] = useState({
     title: '',
     description: '',
@@ -105,7 +107,6 @@ export default function IssuesTable({
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
 
-      // Make sure the returned data has all the expected properties
       const formattedIssue = {
         ...data,
         status: data.status || 'TODO',
@@ -115,11 +116,8 @@ export default function IssuesTable({
         assignee: data.assignee || null,
         dueDate: data.dueDate || null
       };
-
-      // Update the UI with properly formatted issue
       setIssues(prev => [formattedIssue, ...prev]);
       
-      // Close modal and reset form
       setIsModalOpen(false);
       setNewIssue({ 
         title: '', 
@@ -129,6 +127,9 @@ export default function IssuesTable({
         assigneeId: '', 
         dueDate: null 
       });
+      
+      // Add page refresh after creating issue, similar to first code
+      router.refresh();
     } catch (error) {
       console.error('Error creating issue:', error);
     }

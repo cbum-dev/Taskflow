@@ -49,7 +49,9 @@ export function AppSidebar() {
       console.error("Error fetching projects:", error)
     }
   }, [access_token, router])
-
+  const handleRefresh = () => {
+    router.refresh(); // This preserves client-side state
+  };
   useEffect(() => {
     const fetchWorkspaces = async () => {
       if (!access_token) return
@@ -96,20 +98,23 @@ export function AppSidebar() {
   }
 
   const handleAddProject = async () => {
-    if (!newProjectName.trim() || !selectedWorkspace) return
-
+    if (!newProjectName.trim() || !selectedWorkspace) return;
+  
     try {
-      const { data } = await axios.post(
+      await axios.post(
         "http://localhost:3001/api/projects",
         { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
-      )
-      setProjects((prev) => [...prev, data])
-      setNewProjectName("")
+      );
+      
+      setNewProjectName("");
+      // Refetch projects for the current workspace
+      await fetchProjects(selectedWorkspace.id);
+      
     } catch (error) {
-      console.error("Error adding project:", error)
+      console.error("Error adding project:", error);
     }
-  }
+  };
 
   return (
     <Sidebar variant="inset" id="hiiii" className="h-[90vh]">
@@ -148,6 +153,9 @@ export function AppSidebar() {
             </DropdownMenu>
           )}
         </div>
+        <button onClick={handleRefresh}>
+      Refresh Page
+    </button>
         {selectedWorkspace && (
           <div className="flex-1 p-4 overflow-hidden">
             <div className="text-sm font-medium text-gray-500 mb-2">
@@ -160,6 +168,9 @@ export function AppSidebar() {
                 </Button>
               ))}
             </nav>
+            <form>
+              
+            </form>
             <div className="mt-4">
               <Input
                 type="text"
@@ -167,6 +178,7 @@ export function AppSidebar() {
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
                 className="mb-2"
+                onClick={() => router.refresh()}
               />
               <Button variant="default" className="w-full" onClick={handleAddProject}>
                 <PlusIcon className="w-4 h-4 mr-2" /> Add Project

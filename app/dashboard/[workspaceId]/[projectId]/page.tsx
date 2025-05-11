@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { io } from 'socket.io-client'
 import { Input } from '@/components/ui/input'
@@ -21,6 +21,7 @@ const socket = io('http://localhost:3001') // Connect to WebSocket server
 export default function IssuesPage() {
   const { access_token, user } = useAuthStore()
   const { projectId, workspaceId } = useParams()
+  const router = useRouter()
   const [issues, setIssues] = useState<Issue[]>([])
   const [workspaceMembers, setWorkspaceMembers] = useState<{ id: string; name: string }[]>([]) // Store workspace members
   const [search, setSearch] = useState('')
@@ -95,6 +96,9 @@ export default function IssuesPage() {
         dueDate: null 
       });
 
+      // Refresh the page to show updated data
+      router.refresh();
+
     } catch (error) {
       console.error('Error creating issue:', error);
       // Optionally show error to user
@@ -109,7 +113,6 @@ export default function IssuesPage() {
           <TabsTrigger value="table">Issues Table</TabsTrigger>
         </TabsList>
 
-        {/* Kanban Board Tab */}
         <TabsContent value="kanban">
           <div className="flex justify-end mb-4">
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -155,7 +158,6 @@ export default function IssuesPage() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                {/* Priority Selection */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="mb-2">
@@ -173,7 +175,6 @@ export default function IssuesPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Due Date Selection */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="mb-2">
@@ -190,8 +191,8 @@ export default function IssuesPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button onClick={handleCreateIssue} className="w-full mt-4">
-                  Create Issue
+                <Button onClick={()=> router.refresh()} className="w-full mt-4">
+                  Create Issuesss
                 </Button>
               </DialogContent>
             </Dialog>

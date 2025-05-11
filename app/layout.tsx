@@ -28,7 +28,7 @@ export default function RootLayout({
     <html className="" lang="en">
       <SessionWrappper>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased pt-14`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen overflow-clip pt-14`}
         >
           <ThemeProvider>
           <Navbar/>
