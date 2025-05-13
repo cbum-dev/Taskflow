@@ -49,9 +49,6 @@ export function AppSidebar() {
       console.error("Error fetching projects:", error)
     }
   }, [access_token, router])
-  const handleRefresh = () => {
-    router.refresh(); // This preserves client-side state
-  };
   useEffect(() => {
     const fetchWorkspaces = async () => {
       if (!access_token) return
@@ -153,9 +150,6 @@ export function AppSidebar() {
             </DropdownMenu>
           )}
         </div>
-        <button onClick={handleRefresh}>
-      Refresh Page
-    </button>
         {selectedWorkspace && (
           <div className="flex-1 p-4 overflow-hidden">
             <div className="text-sm font-medium text-gray-500 mb-2">

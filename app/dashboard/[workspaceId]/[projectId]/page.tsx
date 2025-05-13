@@ -128,7 +128,7 @@ export default function IssuesPage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="px-6 space-y-4">
       <Tabs defaultValue="kanban">
         <TabsList className="flex space-x-4 bg-transparent">
           <TabsTrigger value="kanban">Kanban Board</TabsTrigger>

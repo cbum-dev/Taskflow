@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -64,7 +63,6 @@ export default function IssuesTable({
   ];
   const priorities = ["LOW", "MEDIUM", "HIGH", "URGENT"];
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const router = useRouter();
   const [newIssue, setNewIssue] = useState({
     title: '',
     description: '',
@@ -81,7 +79,7 @@ export default function IssuesTable({
     IN_PROGRESS: "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100",
     IN_REVIEW: "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-100",
     HOLD_STAGE: "bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-100",
-    COMPLETE: "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100",
+    DONE: "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100",
   };
 
   const priorityColors: Record<string, string> = {
@@ -475,7 +473,7 @@ export default function IssuesTable({
                         className="flex items-center gap-2"
                       >
                         <UserIcon className="w-4 h-4" />
-                        <span>{issue.assignee?.name || "Unassigned"}</span>
+                        <span>{typeof issue.assignee === 'string' ? issue.assignee : "Unassigned"}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="max-h-60 overflow-y-auto">

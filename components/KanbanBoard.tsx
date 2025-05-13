@@ -86,7 +86,7 @@ export default function KanbanBoard() {
 
   return (
     <DndContext collisionDetection={closestCorners} onDragEnd={onDragEnd}>
-      <div className="flex space-x-4 overflow-x-auto p-4 h-screen overflow-scroll">
+      <div className="flex space-x-4 overflow-x-auto p-4 h-auto overflow-scroll">
         {STATUSES.map((status) => (
           <SortableContext key={status} items={issues.filter(issue => issue.status === status)}>
             <KanbanColumn 
