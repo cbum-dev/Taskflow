@@ -24,10 +24,6 @@ const eslintConfig = [
   {
     // Specifically for TypeScript files
     files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      '@typescript-eslint/ban-ts-comment': 'warn', // Make it warn instead of error
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-    },
   },
 ];
 

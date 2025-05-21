@@ -1,6 +1,5 @@
 'use client'
 import React from 'react'
-import { useParams } from 'next/navigation'
 import { DndContext, closestCorners, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useAuthStore } from '@/store/authStore'
@@ -29,7 +28,6 @@ interface KanbanBoardProps {
 
 export default function KanbanBoard({ issues }: KanbanBoardProps) {
   const { access_token } = useAuthStore();
-  const { projectId } = useParams();
 
   const updateIssueStatus = async (issueId: string, newStatus: string) => {
     try {

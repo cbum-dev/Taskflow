@@ -3,12 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  image: string;
-}
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,

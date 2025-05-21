@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,6 +14,7 @@ import { ChevronDownIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { signOut } from "next-auth/react";
+
 
 function Navbar() {
   const { user, clearUser } = useAuthStore();
@@ -64,7 +65,6 @@ function Navbar() {
   <DropdownMenu>
     <DropdownMenuTrigger>
       <Avatar>
-        <AvatarImage src={user?.image || ""} alt="User" />
         <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
       </Avatar>
     </DropdownMenuTrigger>
