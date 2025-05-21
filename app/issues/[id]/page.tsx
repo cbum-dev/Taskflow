@@ -42,7 +42,7 @@ export default function IssueDetailPage() {
     };
 
     if (user) fetchIssue();
-  }, [id, user]);
+  }, [id, user, access_token]);
 
   const addComment = async () => {
     if (!newComment.trim()) return;

@@ -1,47 +1,80 @@
 "use client";
-
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
+import AddMemberForm from "@/components/AddMemberForm";
+import InviteLink from "@/components/InviteLink";
 
-export default function AddMemberForm({ workspaceId, setMembers }) {
-  const [email, setEmail] = useState("");
-  const { user,access_token } = useAuthStore();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+// Define proper interfaces
+interface Member {
+  id: string;
+  name: string;
+  email: string;
+}
 
-  const addMember = async () => {
-    setLoading(true);
-    setError("");
+interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  members: Member[];
+}
 
-    const response = await fetch(`http://localhost:3001/api/workspace/${workspaceId}/add-member`, {
-      method: "PUT",
-      body: JSON.stringify({ email }),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
+// Define the props interface for AddMemberForm
+interface AddMemberFormProps {
+  workspaceId: string;
+  setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
+}
 
-    setLoading(false);
+export default function WorkspaceDetails() {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
+  const { user, access_token } = useAuthStore();
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
 
-    if (response.ok) {
-      const newMember = await response.json();
-      setMembers((prev) => [...prev, newMember.data]);
-      setEmail(""); // Clear input
-    } else {
-      setError("Error adding member. Try again.");
-    }
-  };
+  useEffect(() => {
+    const fetchWorkspace = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/workspace/${id}`, {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setWorkspace(data.data);
+          setMembers(data.data.members || []);
+        }
+      } catch (error) {
+        console.error("Error fetching workspace:", error);
+      }
+    };
+    if (user && access_token) fetchWorkspace();
+  }, [id, user, access_token]);
+
+  if (!workspace) return <p>Loading workspace...</p>;
 
   return (
-    <div className="flex space-x-2">
-      <Input type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <Button onClick={addMember} disabled={loading}>
-        {loading ? "Adding..." : "Add"}
-      </Button>
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="p-6 max-w-2xl mx-auto">
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle>{workspace.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {workspace.description && <p>{workspace.description}</p>}
+          <h3 className="mt-4 text-lg font-semibold">Invite Members</h3>
+          <InviteLink workspaceId={id} />
+          <h3 className="mt-4 text-lg font-semibold">Add Member</h3>
+          <AddMemberForm workspaceId={id} setMembers={setMembers} />
+          <h3 className="mt-4 text-lg font-semibold">Members</h3>
+          <ul className="list-disc pl-5">
+            {members.map((member) => (
+              <li key={member.id}>
+                {member.name} ({member.email})
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }

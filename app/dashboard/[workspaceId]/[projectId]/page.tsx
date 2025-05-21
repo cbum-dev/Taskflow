@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { io } from 'socket.io-client'
 import { Input } from '@/components/ui/input'
@@ -14,14 +14,25 @@ import { Calendar } from '@/components/ui/calendar'
 import { useAuthStore } from '@/store/authStore'
 import KanbanBoard from '@/components/KanbanBoard'
 import IssuesTable from '@/components/IssuesTable'
-import { Issue } from '@/types/issue'
+
 
 const socket = io('http://localhost:3001')
+
+interface Issue {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  projectId: string;
+  assignee?: string;
+  dueDate?: string;
+}
+
 
 export default function IssuesPage() {
   const { access_token, user } = useAuthStore()
   const { projectId, workspaceId } = useParams()
-  const router = useRouter()
   const [issues, setIssues] = useState<Issue[]>([])
   const [workspaceMembers, setWorkspaceMembers] = useState<{ id: string; name: string }[]>([])
   const [search, setSearch] = useState('')
@@ -214,8 +225,8 @@ export default function IssuesPage() {
                   <DropdownMenuContent>
                     <Calendar
                       mode="single"
-                      selected={newIssue.dueDate}
-                      onSelect={(date) => date && setNewIssue({ ...newIssue, dueDate: date })}
+                      selected={newIssue.dueDate || undefined}
+                      onSelect={(date) => setNewIssue({ ...newIssue, dueDate: date || null })}
                     />
                   </DropdownMenuContent>
                 </DropdownMenu>

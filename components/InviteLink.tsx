@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function InviteLink({ workspaceId }) {
+interface InviteLinkProps {
+  workspaceId: string;
+}
+
+export default function InviteLink({ workspaceId }: InviteLinkProps) {
   const [inviteLink, setInviteLink] = useState("");
 
   useEffect(() => {

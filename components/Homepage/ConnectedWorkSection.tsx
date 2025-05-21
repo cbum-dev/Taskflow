@@ -6,13 +6,13 @@ function ConnectedWorkSection() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">It's a connected task</h2>
+              <h2 className="text-3xl font-bold mb-6">It&apos;s a connected task</h2>
               <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="font-medium">Game: Status</span>
                   <span className="text-sm text-gray-500">Subtasks</span>
                 </div>
-                <p className="mb-4 text-gray-600 dark:text-gray-300">It's a connected task.</p>
+                <p className="mb-4 text-gray-600 dark:text-gray-300">It&apos;s a connected task.</p>
                 <ul className="space-y-2 mb-4">
                   <li className="flex items-center gap-2">
                     <input type="checkbox" className="rounded text-blue-500" />
@@ -36,7 +36,7 @@ function ConnectedWorkSection() {
             <div>
               <h3 className="text-2xl font-bold mb-4">Connected Tasks</h3>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Tasks aren't just tasks—they're connected. Link them to docs, chat, whiteboards, and projects so work flows effortlessly.
+                Tasks aren&apos;t just tasks—they&apos;re connected. Link them to docs, chat, whiteboards, and projects so work flows effortlessly.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">

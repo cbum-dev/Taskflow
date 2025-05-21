@@ -96,7 +96,7 @@ export default function HomePage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-gray-400 mb-4">
-                You don't have any workspaces yet. Create your first workspace to get started!
+                You don&apos;t have any workspaces yet. Create your first workspace to get started!
               </p>
               <Button 
                 className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-600 dark:hover:to-orange-700"

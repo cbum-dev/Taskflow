@@ -3,6 +3,13 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  image: string;
+}
+
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -44,19 +51,19 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.user.id;
+        token.id = user.id;
         token.token = user.token;
-        token.email = user.user.email;
-        token.name = user.user.name;
-        token.image = user.user.image;;
+        token.email = user.email;
+        token.name = user.name;
+        token.image = user.image;;
       }
       console.log(token)
       return token;
     },
     async session({ session, token }) {
       if (token.token) {
-        session.user.id = token.id;
-        session.accessToken = token.token;
+        session.user.id = token.id as string;
+        session.accessToken = token.token as string;
 
       }
       return session;

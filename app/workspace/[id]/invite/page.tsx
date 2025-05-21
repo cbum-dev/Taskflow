@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 
 export default function InvitePage() {
@@ -35,7 +34,7 @@ export default function InvitePage() {
     };
 
     joinWorkspace();
-  }, [id, user, router]);
+  }, [id, user, router, access_token]);
 
   return (
     <div className="flex justify-center items-center min-h-screen">

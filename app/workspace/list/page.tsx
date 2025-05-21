@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
 
+interface Workspace {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export default function WorkspacesList() {
-  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const { user,access_token } = useAuthStore();
   const router = useRouter();
 
@@ -23,7 +29,7 @@ export default function WorkspacesList() {
     };
 
     if (user) fetchWorkspaces();
-  }, [user]);
+  }, [user,access_token]);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

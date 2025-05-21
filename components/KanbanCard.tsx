@@ -12,6 +12,7 @@ interface Issue {
   status: string;
   createdAt?: string;
   assignees?: string;
+  dueDate?: string;
 }
 
 interface KanbanCardProps {

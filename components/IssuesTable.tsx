@@ -154,7 +154,7 @@ export default function IssuesTable({
             headers: { Authorization: `Bearer ${access_token}` },
           }
         );
-        const formattedIssues = (data.data || []).map((issue: any) => ({
+        const formattedIssues = (data.data || []).map((issue: Issue) => ({
           ...issue,
           status: issue.status || 'TODO',
           priority: issue.priority || 'MEDIUM',
@@ -218,7 +218,7 @@ export default function IssuesTable({
     }
   };
 
-  const formatStatus = (status: any): string => {
+  const formatStatus = (status: string): string => {
     if (typeof status === 'string') {
       return status.split('_').join(' ');
     }

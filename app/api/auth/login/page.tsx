@@ -24,7 +24,6 @@ export default function LoginPage() {
           id: session.user.id,
           name: session.user.name,
           email: session.user.email,
-          image: session.user.image || undefined,
         },
         session.accessToken
       );
