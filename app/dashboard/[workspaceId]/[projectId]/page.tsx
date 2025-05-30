@@ -81,7 +81,7 @@ export default function IssuesPage() {
 
     socket.on("issueCreated", (newIssue) => {
       setIssues(prev => [newIssue, ...prev])
-      setRefreshKey(prev => prev + 1) // Trigger refresh
+      setRefreshKey(prev => prev + 1) 
     })
 
     socket.on("issueUpdated", (updatedIssue) => {

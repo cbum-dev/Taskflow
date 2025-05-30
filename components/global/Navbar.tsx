@@ -26,7 +26,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="flex fixed top-0 z-100 w-full items-center h-14 justify-between px-6 py-3 border-b shadow-sm">
+    <nav className="flex fixed backdrop-blur-sm top-0 z-1000 w-full items-center h-14 justify-between px-6 py-3 border-b shadow-sm">
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-xl font-bold">
           TaskFlow

@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import Image from 'next/image';
 import HeroSection from '@/components/Homepage/HeroSection';
 import ConnectedWorkSection from '@/components/Homepage/ConnectedWorkSection';
+import { GridSmallBackgroundDemo } from '@/components/Acertinity/GridBg';
 interface Workspace {
   id: string;
   name: string;
@@ -41,32 +42,9 @@ export default function HomePage() {
 
   return (
     <div className="relative h-[100vh-56px] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white transition-colors duration-300 overflow-scroll">
-      
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image 
-          src="/dot1.svg" 
-          alt="Background Dots"
-          fill
-          className="opacity-5 dark:opacity-10 object-cover transition-opacity duration-300"
-          priority
-        />
-      </div>
+      <GridSmallBackgroundDemo  />
 
-      <div className="relative z-10 flex flex-col items-center text-center px-4 py-16 w-full">
-        <h1 className="text-6xl md:text-7xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-orange-500 dark:to-yellow-500">
-          TaskFlow
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mb-8">
-          Organize your work efficiently with TaskFlow. Create, manage, and track your workspaces and projects seamlessly.
-        </p>
-        
-        <Button 
-          className="mt-2 px-8 py-3 text-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-600 dark:hover:to-orange-700 text-white shadow-lg transition-all duration-300 transform hover:scale-105"
-          onClick={() => router.push(session ? '/dashboard' : '/login')}
-        >
-          {session ? 'Go to Dashboard' : 'Get Started'}
-        </Button>
-      </div>
+
       
       {session && (
         <div className="relative z-10 w-full max-w-5xl p-6 mb-16">

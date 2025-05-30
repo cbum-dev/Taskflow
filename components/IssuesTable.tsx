@@ -473,7 +473,7 @@ export default function IssuesTable({
                         className="flex items-center gap-2"
                       >
                         <UserIcon className="w-4 h-4" />
-                        <span>{typeof issue.assignee === 'string' ? issue.assignee : "Unassigned"}</span>
+                        <span>{typeof issue?.assignee?.name === 'string' ? issue?.assignee?.name : "Unassigned"}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="max-h-60 overflow-y-auto">

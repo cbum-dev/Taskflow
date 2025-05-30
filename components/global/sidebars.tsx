@@ -42,9 +42,9 @@ export function AppSidebar() {
       })
       setProjects(data.data || [])
 
-      if (data.data.length > 0) {
-        router.push(`/dashboard/${workspaceId}/${data.data[0].id}`)
-      }
+      // if (data.data.length > 0) {
+      //   router.push(`/dashboard/${workspaceId}/${data.data[0].id}`)
+      // }
     } catch (error) {
       console.error("Error fetching projects:", error)
     }

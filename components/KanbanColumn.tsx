@@ -42,7 +42,7 @@ export default function KanbanColumn({ status, issues, onDeleteIssue }: KanbanCo
     <div
       ref={setNodeRef}
       className={cn(
-        "w-72 h-auto flex-shrink-0 rounded-lg border p-4 transition-colors",
+        "w-72 flex-shrink-0 rounded-lg border p-4 transition-colors",
         statusColors[status],
         isOver ? "ring-2 ring-offset-2 ring-blue-500" : ""
       )}

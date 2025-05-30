@@ -28,13 +28,12 @@ export default function RootLayout({
     <html className="" lang="en">
       <SessionWrappper>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen overflow-scroll pt-14`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased mt-14 h-screen overflow-scroll`}
         >
           <ThemeProvider>
-          <Navbar/>
-          {children}
-            </ThemeProvider>
-
+            <Navbar />
+            {children}
+          </ThemeProvider>
         </body>
       </SessionWrappper>
     </html>
