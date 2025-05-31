@@ -35,7 +35,7 @@ export const useAuthStore = create(
         }),
     }),
     {
-      name: "auth-store", // Key for localStorage, 
+      name: "auth-store", 
     }
   )
 );

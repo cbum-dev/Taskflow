@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionWrappper from "./component/SessionWrappper";
 import Navbar from "@/components/global/Navbar";
 import ThemeProvider from "@/components/Themprovider";
+import { Footer } from "@/components/global/Footer";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className="" lang="en">
+    <html className="" lang="en" suppressHydrationWarning>
       <SessionWrappper>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased mt-14 h-screen overflow-scroll`}
@@ -33,6 +34,7 @@ export default function RootLayout({
           <ThemeProvider>
             <Navbar />
             {children}
+            <Footer/>
           </ThemeProvider>
         </body>
       </SessionWrappper>
