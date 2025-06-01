@@ -28,13 +28,13 @@ export default function AddMemberForm({ workspaceId, setMembers }: AddMemberForm
     setIsLoading(true);
     
     try {
-      const response = await fetch(`http://localhost:3001/api/workspace/${workspaceId}/members`, {
-        method: "POST",
+      const response = await fetch(`https://json-schema-lint.vercel.app/api/workspace/${workspaceId}/add-member`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${access_token}`,
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ workspaceId, email }),
       });
       
       if (response.ok) {

@@ -82,7 +82,7 @@ export default function LoginPage() {
         <CardFooter className="text-center">
           <p className="text-sm">
             Don`t have an account?{" "}
-            <Button variant="link" className="p-0" onClick={() => router.push("/register")}>
+            <Button variant="link" className="p-0" onClick={() => router.push("/api/auth/register")}>
               Register
             </Button>
           </p>

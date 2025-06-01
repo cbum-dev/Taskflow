@@ -8,18 +8,22 @@ import HowItWorks from '@/components/Homepage/HowItWorks';
 import SocialProof from '@/components/Homepage/SocialProof';
 import PricingPreview from '@/components/Homepage/Pricing';
 import CTAFooter from '@/components/Homepage/CTA'
-export default function HomePage() {
+import { Footer } from '@/components/global/Footer'
+import { useSession } from 'next-auth/react';
 
+export default function HomePage() {
+  const {data : session} = useSession()
 
   return (
     <div className="relative  flex flex-col items-center justify-center dark:bg-black text-gray-900 dark:text-white transition-colors duration-300 ">
       <GridSmallBackgroundDemo  />
-      <Dashboard/>
+      {session && <Dashboard/>}
       <FeatureGrid/>
       <HowItWorks/>
       <SocialProof/>
       <PricingPreview/>
       <CTAFooter/>
+      <Footer/>
     </div>
   );
 }

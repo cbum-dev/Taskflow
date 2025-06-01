@@ -19,7 +19,7 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    const response = await fetch("http://localhost:3001/api/user/register", {
+    const response = await fetch("https://json-schema-lint.vercel.app/api/user/register", {
       method: "POST",
       body: JSON.stringify({ email, password, name }),
       headers: { "Content-Type": "application/json" },

@@ -34,7 +34,7 @@ import { Issue } from "@/types/issue";
 import Link from "next/link";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const socket = io("http://localhost:3001");
+const socket = io("https://json-schema-lint.vercel.app");
 
 interface Assignee {
   id: string;
@@ -100,7 +100,7 @@ export default function IssuesTable({
     setIsCreating(true);
     try {
       const { data } = await axios.post(
-        'http://localhost:3001/api/issues',
+        'https://json-schema-lint.vercel.app/api/issues',
         { 
           ...newIssue, 
           projectId, 
@@ -149,7 +149,7 @@ export default function IssuesTable({
     const fetchIssues = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:3001/api/issues/project/${projectId}`,
+          `https://json-schema-lint.vercel.app/api/issues/project/${projectId}`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -183,7 +183,7 @@ export default function IssuesTable({
     const fetchWorkspaceMembers = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:3001/api/workspace/${workspaceId}/members`,
+          `https://json-schema-lint.vercel.app/api/workspace/${workspaceId}/members`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -208,7 +208,7 @@ export default function IssuesTable({
   ) => {
     try {
       await axios.put(
-        `http://localhost:3001/api/issues/${issueId}`,
+        `https://json-schema-lint.vercel.app/api/issues/${issueId}`,
         { [field]: value },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );

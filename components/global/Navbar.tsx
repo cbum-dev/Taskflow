@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "../ui/input";
-import { ChevronDownIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { signOut } from "next-auth/react";
@@ -26,35 +25,17 @@ function Navbar() {
   };
 
   return (
-    <nav className="flex fixed backdrop-blur-sm top-0 z-1000 w-full items-center h-14 justify-between px-6 py-3 border-b shadow-sm">
+    <nav className="flex fixed backdrop-blur-sm top-0 z-[1000] w-full items-center h-14 justify-between px-6 py-3 border-b shadow-sm">
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-xl font-bold">
           TaskFlow
         </Link>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center space-x-2">
-            <span>Projects</span>
-            <ChevronDownIcon className="w-4 h-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>Project 1</DropdownMenuItem>
-            <DropdownMenuItem>Project 2</DropdownMenuItem>
-            <DropdownMenuItem>New Project</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center space-x-2">
-            <span>Filters</span>
-            <ChevronDownIcon className="w-4 h-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>Recent Filters</DropdownMenuItem>
-            <DropdownMenuItem>Saved Filters</DropdownMenuItem>
-          </DropdownMenuContent>
-          <Button variant="default">Create</Button>
-        </DropdownMenu>
+        <Link href="/workspace/list">
+          <Button variant="outline">My Workspaces</Button>
+          </Link>
+          <Link href="/workspace/create">
+          <Button variant="default">Create Workspace</Button>
+          </Link>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -69,7 +50,7 @@ function Navbar() {
       </Avatar>
     </DropdownMenuTrigger>
 
-    <DropdownMenuContent align="end">
+    <DropdownMenuContent className="z-[10000]" align="end">
       <DropdownMenuItem>Profile</DropdownMenuItem>
       <DropdownMenuItem>Settings</DropdownMenuItem>
       <DropdownMenuItem onClick={handleLogout} className="text-red-500">

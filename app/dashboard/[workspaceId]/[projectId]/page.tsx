@@ -16,7 +16,7 @@ import KanbanBoard from '@/components/KanbanBoard'
 import IssuesTable from '@/components/IssuesTable'
 
 
-const socket = io('http://localhost:3001')
+const socket = io('https://json-schema-lint.vercel.app')
 
 interface Issue {
   id: string;
@@ -53,7 +53,7 @@ export default function IssuesPage() {
 
   const fetchIssues = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:3001/api/issues/project/${projectId}`, {
+      const { data } = await axios.get(`https://json-schema-lint.vercel.app/api/issues/project/${projectId}`, {
         headers: { Authorization: `Bearer ${access_token}` },
       })
       setIssues(data.data || [])
@@ -64,7 +64,7 @@ export default function IssuesPage() {
 
   const fetchWorkspaceMembers = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:3001/api/workspace/${workspaceId}/members`, {
+      const { data } = await axios.get(`https://json-schema-lint.vercel.app/api/workspace/${workspaceId}/members`, {
         headers: { Authorization: `Bearer ${access_token}` },
       })
       setWorkspaceMembers(data.data || [])
@@ -110,7 +110,7 @@ export default function IssuesPage() {
 
     try {
       const { data } = await axios.post(
-        'http://localhost:3001/api/issues',
+        'https://json-schema-lint.vercel.app/api/issues',
         { ...newIssue, projectId, reporterId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
       )

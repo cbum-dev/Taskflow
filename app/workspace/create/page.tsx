@@ -26,7 +26,7 @@ export default function CreateWorkspacePage() {
       return;
     }
 
-    const response = await fetch("http://localhost:3001/api/workspace", {
+    const response = await fetch("https://json-schema-lint.vercel.app/api/workspace", {
       method: "POST",
       body: JSON.stringify({ name, description }),
       headers: {
