@@ -34,7 +34,7 @@ import { Issue } from "@/types/issue";
 import Link from "next/link";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const socket = io("https://json-schema-lint.vercel.app");
+const socket = io("http://localhost:3001");
 
 interface Assignee {
   id: string;
@@ -100,7 +100,7 @@ export default function IssuesTable({
     setIsCreating(true);
     try {
       const { data } = await axios.post(
-        'https://json-schema-lint.vercel.app/api/issues',
+        'http://localhost:3001/api/issues',
         { 
           ...newIssue, 
           projectId, 
@@ -149,7 +149,7 @@ export default function IssuesTable({
     const fetchIssues = async () => {
       try {
         const { data } = await axios.get(
-          `https://json-schema-lint.vercel.app/api/issues/project/${projectId}`,
+          `http://localhost:3001/api/issues/project/${projectId}`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -183,7 +183,7 @@ export default function IssuesTable({
     const fetchWorkspaceMembers = async () => {
       try {
         const { data } = await axios.get(
-          `https://json-schema-lint.vercel.app/api/workspace/${workspaceId}/members`,
+          `http://localhost:3001/api/workspace/${workspaceId}/members`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -208,7 +208,7 @@ export default function IssuesTable({
   ) => {
     try {
       await axios.put(
-        `https://json-schema-lint.vercel.app/api/issues/${issueId}`,
+        `http://localhost:3001/api/issues/${issueId}`,
         { [field]: value },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -308,7 +308,27 @@ export default function IssuesTable({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                
+                                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Due Date
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        {newIssue.dueDate ? newIssue.dueDate.toLocaleDateString() : 'No date'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <Calendar
+                        mode="single"
+                        selected={newIssue.dueDate || undefined}
+                        onSelect={(date) => date && setNewIssue({...newIssue, dueDate: date})}
+                      />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Priority
@@ -356,27 +376,7 @@ export default function IssuesTable({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Due Date
-                  </label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start">
-                        <CalendarIcon className="w-4 h-4 mr-2" />
-                        {newIssue.dueDate ? newIssue.dueDate.toLocaleDateString() : 'No date'}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <Calendar
-                        mode="single"
-                        selected={newIssue.dueDate || undefined}
-                        onSelect={(date) => date && setNewIssue({...newIssue, dueDate: date})}
-                      />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+
                 
                 <Button 
                   onClick={handleCreateIssue}
@@ -415,7 +415,30 @@ export default function IssuesTable({
                     {issue.title || "Untitled Issue"}
                   </Link>
                 </TableCell>
-
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>
+                          {issue.dueDate
+                            ? new Date(issue.dueDate).toLocaleDateString()
+                            : "Set date"}
+                        </span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <Calendar
+                        mode="single"
+                        selected={issue.dueDate ? new Date(issue.dueDate) : undefined}
+                        onSelect={(date) =>
+                          date && updateIssue(issue.id, "dueDate", date.toISOString())
+                        }
+                        className="rounded-md border"
+                      />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -497,30 +520,7 @@ export default function IssuesTable({
                   </DropdownMenu>
                 </TableCell>
 
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>
-                          {issue.dueDate
-                            ? new Date(issue.dueDate).toLocaleDateString()
-                            : "Set date"}
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <Calendar
-                        mode="single"
-                        selected={issue.dueDate ? new Date(issue.dueDate) : undefined}
-                        onSelect={(date) =>
-                          date && updateIssue(issue.id, "dueDate", date.toISOString())
-                        }
-                        className="rounded-md border"
-                      />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+
               </TableRow>
             ))}
           </TableBody>

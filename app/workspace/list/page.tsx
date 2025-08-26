@@ -23,7 +23,7 @@ export default function WorkspacesList() {
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const response = await fetch("https://json-schema-lint.vercel.app/api/workspace/user", {
+        const response = await fetch("http://localhost:3001/api/workspace/user", {
           headers: { Authorization: `Bearer ${access_token}` },
         });
         if (response.ok) {

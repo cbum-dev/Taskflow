@@ -17,7 +17,7 @@ export default function InvitePage() {
         return;
       }
 
-      const response = await fetch(`https://json-schema-lint.vercel.app/api/workspace/${id}/add-member`, {
+      const response = await fetch(`http://localhost:3001/api/workspace/${id}/add-member`, {
         method: "PUT",
         body: JSON.stringify({ workspaceId: id, memberId: user.id }),
         headers: {

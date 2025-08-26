@@ -64,7 +64,7 @@ const Dashboard = () => {
     const fetchWorkspaces = async () => {
       try {
         const response = await axios.get(
-          "https://json-schema-lint.vercel.app/api/workspace/user",
+          "http://localhost:3001/api/workspace/user",
           {
             headers: {
               Authorization: `Bearer ${access_token}`,
@@ -92,7 +92,7 @@ const Dashboard = () => {
       try {
         setLoading((prev) => ({ ...prev, projects: true }));
         const response = await axios.get(
-          `https://json-schema-lint.vercel.app/api/projects/workspace/${activeWorkspace}`,
+          `http://localhost:3001/api/projects/workspace/${activeWorkspace}`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }
@@ -116,7 +116,7 @@ const Dashboard = () => {
         setLoading((prev) => ({ ...prev, issues: true }));
         const projectIds = projects.map((p) => p.id).join(",");
         const response = await axios.get(
-          `https://json-schema-lint.vercel.app/api/issues/project/${projectIds}`,
+          `http://localhost:3001/api/issues/project/${projectIds}`,
           {
             headers: { Authorization: `Bearer ${access_token}` },
           }

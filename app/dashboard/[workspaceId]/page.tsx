@@ -27,6 +27,9 @@ import { useAuthStore } from "@/store/authStore";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { io } from "socket.io-client";
+
+const socket = io('http://localhost:3001')
 type Project = {
   id: string;
   name: string;
@@ -59,7 +62,7 @@ export default function WorkspaceDashboard() {
   const fetchWorkspace = async () => {
     try {
       const res = await axios.get(
-        `https://json-schema-lint.vercel.app/api/workspace/${workspaceId}`,
+        `http://localhost:3001/api/workspace/${workspaceId}`,
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
       setWorkspace(res.data.data || null);
@@ -71,7 +74,7 @@ export default function WorkspaceDashboard() {
   const fetchProjects = async () => {
     try {
       const res = await axios.get(
-        `https://json-schema-lint.vercel.app/api/projects/workspace/${workspaceId}`,
+        `http://localhost:3001/api/projects/workspace/${workspaceId}`,
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
       setProjects(res.data.data || []);
@@ -86,18 +89,14 @@ export default function WorkspaceDashboard() {
     setLoading(false);
   };
   
-  useEffect(() => {
-    fetchAll();
-  }, [access_token]);
-  
 
   const handleCreateProject = async (e:any) => {
     e.preventDefault();
     setCreatingProject(true);
     setError("");
     try {
-      await axios.post(
-        "https://json-schema-lint.vercel.app/api/projects",
+      const {data} = await axios.post(
+        "http://localhost:3001/api/projects",
         {
           name: newProjectName,
           description: newProjectDescription,
@@ -108,6 +107,7 @@ export default function WorkspaceDashboard() {
       );
       setNewProjectName("");
       setNewProjectDescription("");
+      socket.emit("projectCreated", data);
       setOpenDialog(false);
       fetchAll();
     } catch (err) {

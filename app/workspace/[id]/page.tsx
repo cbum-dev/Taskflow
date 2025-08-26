@@ -32,7 +32,7 @@ export default function WorkspaceDetails() {
     }
 
     try {
-      const response = await fetch(`https://json-schema-lint.vercel.app/api/workspace/${id}/add-member`, {
+      const response = await fetch(`http://localhost:3001/api/workspace/${id}/add-member`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export default function WorkspaceDetails() {
   useEffect(() => {
     const fetchWorkspace = async () => {
       try {
-        const response = await fetch(`https://json-schema-lint.vercel.app/api/workspace/${id}`, {
+        const response = await fetch(`http://localhost:3001/api/workspace/${id}`, {
           headers: { Authorization: `Bearer ${access_token}` },
         });
         if (response.ok) {

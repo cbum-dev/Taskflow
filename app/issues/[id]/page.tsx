@@ -25,7 +25,7 @@ export default function IssueDetailPage() {
   useEffect(() => {
     const fetchIssue = async () => {
       try {
-        const response = await fetch(`https://json-schema-lint.vercel.app/api/issues/${id}`, {
+        const response = await fetch(`http://localhost:3001/api/issues/${id}`, {
           headers: { Authorization: `Bearer ${access_token}` },
         });
         if (response.ok) {

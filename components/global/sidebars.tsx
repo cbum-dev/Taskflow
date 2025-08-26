@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore'
 import axios from 'axios'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
+import { io } from "socket.io-client";
 
 interface Workspace {
   id: string;
@@ -24,6 +25,7 @@ interface Project {
   workspaceId: string;
 }
 
+const socket = io('http://localhost:3001')
 export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()
@@ -37,7 +39,7 @@ export function AppSidebar() {
   const fetchProjects = useCallback(async (workspaceId: string) => {
     if (!access_token) return
     try {
-      const { data } = await axios.get(`https://json-schema-lint.vercel.app/api/projects/workspace/${workspaceId}`, {
+      const { data } = await axios.get(`http://localhost:3001/api/projects/workspace/${workspaceId}`, {
         headers: { Authorization: `Bearer ${access_token}` }
       })
       setProjects(data.data || [])
@@ -53,7 +55,7 @@ export function AppSidebar() {
     const fetchWorkspaces = async () => {
       if (!access_token) return
       try {
-        const { data } = await axios.get("https://json-schema-lint.vercel.app/api/workspace/user", {
+        const { data } = await axios.get("http://localhost:3001/api/workspace/user", {
           headers: { Authorization: `Bearer ${access_token}` }
         })
         setWorkspaces(data.data || [])
@@ -78,12 +80,36 @@ export function AppSidebar() {
     router.push(`/dashboard/${workspace.id}`)
   }
 
+  useEffect(() => {
+    socket.on("projectCreated", (newProject) => {
+      setProjects((prev) => [newProject, ...prev]);
+    });
+
+    socket.on("projectUpdated", (updatedProject) => {
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.id === updatedProject.id ? updatedProject : project
+        )
+      );
+    });
+
+    socket.on("projectDeleted", (deletedId) => {
+      setProjects((prev) => prev.filter((project) => project.id !== deletedId));
+    });
+
+    return () => {
+      socket.off("projectCreated");
+      socket.off("projectUpdated");
+      socket.off("projectDeleted");
+    };
+  }, [access_token]);
+
   const handleAddWorkspace = async () => {
     if (!newWorkspaceName.trim()) return
 
     try {
       const { data } = await axios.post(
-        "https://json-schema-lint.vercel.app/api/workspace",
+        "http://localhost:3001/api/workspace",
         { name: newWorkspaceName },
         { headers: { Authorization: `Bearer ${access_token}` } }
       )
@@ -99,12 +125,13 @@ export function AppSidebar() {
   
     try {
       await axios.post(
-        "https://json-schema-lint.vercel.app/api/projects",
+        "http://localhost:3001/api/projects",
         { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
       
       setNewProjectName("");
+      socket.emit("projectCreated", { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id });
       // Refetch projects for the current workspace
       await fetchProjects(selectedWorkspace.id);
       
@@ -112,6 +139,7 @@ export function AppSidebar() {
       console.error("Error adding project:", error);
     }
   };
+
 
   return (
     <Sidebar variant="inset" id="hiiii" className="h-[90vh]">
@@ -151,7 +179,7 @@ export function AppSidebar() {
           )}
         </div>
         {selectedWorkspace && (
-          <div className="flex-1 p-4 overflow-hidden">
+          <div className="flex-1 p-4 overflow-auto">
             <div className="text-sm font-medium text-gray-500 mb-2">
               Projects in {selectedWorkspace.name}
             </div>
