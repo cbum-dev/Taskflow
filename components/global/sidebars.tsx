@@ -25,7 +25,7 @@ interface Project {
   workspaceId: string;
 }
 
-const socket = io('http://localhost:3001')
+const socket = io('https://taskflow-backend-dkwh.onrender.com')
 export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()

@@ -8,6 +8,7 @@ import { WorkspaceMember } from "@/types/types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
+import { Button } from "@/components/ui/button";
 interface Member extends WorkspaceMember {
   email: string;
 }
@@ -83,7 +84,7 @@ export default function WorkspaceDetails() {
   if (!workspace) return <p>Loading workspace...</p>;
 
   return (
-    <div className="p-6 max-w-2xl mt-14 mx-auto">
+    <div className="p-6 my-auto max-w-2xl mt-14 mx-auto">
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle>{workspace.name}</CardTitle>
@@ -96,7 +97,6 @@ export default function WorkspaceDetails() {
             // @ts-ignore
             onAddMember={addMember} 
           />
-          
           <h3 className="mt-4 text-lg font-semibold">Members</h3>
           <ul className="list-disc pl-5">
             {members.map((member) => (
@@ -105,6 +105,16 @@ export default function WorkspaceDetails() {
               </li>
             ))}
           </ul>
+          {members.length === 0 && <p className="mt-2">No members yet.</p>}
+          <div className="flex flex-col justify-center items-center mt-6 space-y-2 w-full">
+            <h2 className="mx-auto w-full text-center">Or</h2>
+            <Button
+              onClick={() => router.push(`/dashboard/${id}`)}
+              className="mt-2 mx-auto"
+            >
+              Continue to dashboard
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -92,7 +92,7 @@ export default function WorkspacesList() {
                 Create your first workspace to start collaborating with your team
               </p>
               <Button
-                onClick={() => router.push("/workspace/new")}
+                onClick={() => router.push("/workspace/create")}
                 className="mt-4"
               >
                 Create Workspace

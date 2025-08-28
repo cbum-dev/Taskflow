@@ -12,7 +12,7 @@ import api from "@/services/api";
 import { Issue } from "@/types/types";
 import { toast } from "sonner";
 
-const socket = io("http://localhost:3001");
+const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
 export default function IssueTable() {
   const { projectId, workspaceId } = useParams();

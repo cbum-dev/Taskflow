@@ -156,7 +156,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="px-6 z-10 py-24 space-y-8 w-full min-h-screen relative bg-neutral-50 dark:bg-neutral-950">
+    <div className="px-6 z-10 py-24 space-y-8 w-full relative bg-neutral-50 dark:bg-neutral-950">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
       <div className="max-w-7xl mx-auto space-y-10">

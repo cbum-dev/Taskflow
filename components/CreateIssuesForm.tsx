@@ -17,7 +17,7 @@ import { WorkspaceMember } from "@/types/types";
 import { priorities, statuses } from "@/services/valus";
 import api from "@/services/api";
 
-const socket = io("http://localhost:3001");
+const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
 export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<React.SetStateAction<Issue[]>> }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

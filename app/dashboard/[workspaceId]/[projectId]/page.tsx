@@ -8,7 +8,8 @@ import IssueTable from '@/components/issueTable'
 import CreateIssue from '@/components/CreateIssuesForm'
 import { Issue } from '@/types/types'
 import api from '@/services/api'
-const socket = io('http://localhost:3001')
+
+const socket = io('https://taskflow-backend-dkwh.onrender.com')
 
 
 export default function IssuesPage() {

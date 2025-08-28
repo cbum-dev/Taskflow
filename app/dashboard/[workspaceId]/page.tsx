@@ -30,8 +30,9 @@ import { io } from "socket.io-client";
 import { Project,Workspace } from "@/types/types";
 import api from "@/services/api";
 import {toast} from "sonner";
+import WorkspaceDashboardSkeleton from "@/components/DashboardSkeleton";
 
-const socket = io('http://localhost:3001')
+const socket = io('https://taskflow-backend-dkwh.onrender.com')
 
 export default function WorkspaceDashboard() {
   const params = useParams();
@@ -110,7 +111,7 @@ export default function WorkspaceDashboard() {
       socket.emit("projectCreated", data);
       console.log("Project created:", data);
       toast("Project created successfully", {
-        description: "Sunday, December 03, 2023 at 9:00 AM",
+        description: "You can click to start working on your new project.",
         action: {
           label: "Undo",
           onClick: () => console.log("Undo"),
@@ -134,14 +135,7 @@ export default function WorkspaceDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48 rounded-lg" />
-          ))}
-        </div>
-      </div>
+      <WorkspaceDashboardSkeleton/>
     );
   }
 
