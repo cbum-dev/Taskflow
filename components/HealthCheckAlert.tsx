@@ -9,7 +9,7 @@ export default function HealthCheckAlert() {
 
     useEffect(() => {
         const checkHealth = () => {
-            fetch("/health")
+            fetch("https://taskflow-backend-dkwh.onrender.com/health")
                 .then((res) => {
                     if (res.ok) return res.json();
                     throw new Error("Server down");
