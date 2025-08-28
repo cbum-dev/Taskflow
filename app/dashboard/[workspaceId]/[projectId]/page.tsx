@@ -2,25 +2,13 @@
 
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import axios from 'axios'
 import { io } from 'socket.io-client'
 import { useAuthStore } from '@/store/authStore'
 import IssueTable from '@/components/issueTable'
 import CreateIssue from '@/components/CreateIssuesForm'
-
-
+import { Issue } from '@/types/types'
+import api from '@/services/api'
 const socket = io('http://localhost:3001')
-
-interface Issue {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority: string;
-  projectId: string;
-  assignee?: string;
-  dueDate?: string;
-}
 
 
 export default function IssuesPage() {
@@ -30,10 +18,9 @@ export default function IssuesPage() {
 
   const fetchIssues = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:3001/api/issues/project/${projectId}`, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
-      setIssues(data.data || [])
+      const { data } = await api.get(`/issues/project/${projectId}`);
+      setIssues(data.data || []);
+      console.log(issues)
     } catch (error) {
       console.error('Error fetching issues:', error)
     }
@@ -46,7 +33,7 @@ export default function IssuesPage() {
     }
 
     socket.on("issueUpdated", (updatedIssue) => {
-      setIssues(prev => prev.map(issue => 
+      setIssues(prev => prev.map(issue =>
         issue.id === updatedIssue.id ? updatedIssue : issue
       ))
     })
@@ -65,10 +52,9 @@ export default function IssuesPage() {
   return (
     <div className="px-6 space-y-4">
       <CreateIssue
-        issues={issues}
         setIssues={setIssues}
       />
-      <IssueTable/>
+      <IssueTable />
     </div>
   )
 }

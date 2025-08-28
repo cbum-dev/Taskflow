@@ -28,7 +28,7 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (response.ok) {
-      router.push("/login");
+      router.push("api/auth/login");
     } else {
       setError("Error registering user. Please try again.");
     }

@@ -42,7 +42,7 @@ export default function WorkspacesList() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-6 max-w-6xl mt-14 mx-auto">
         <div className="flex justify-between items-center mb-8">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
@@ -66,7 +66,7 @@ export default function WorkspacesList() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mt-14">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Your Workspaces

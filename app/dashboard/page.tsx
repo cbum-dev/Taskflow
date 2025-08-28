@@ -169,7 +169,6 @@ export default function Dashboard() {
         <CardDescription>Current distribution of issues</CardDescription>
       </CardHeader>
       <CardContent className="h-80">
-        {/* Ensure ResponsiveContainer has proper dimensions */}
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

@@ -4,10 +4,9 @@ import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
 import AddMemberForm from "@/components/AddMemberForm";
-
-interface Member {
-  id: string;
-  name: string;
+import { WorkspaceMember } from "@/types/types";
+import { toast } from "sonner";
+interface Member extends WorkspaceMember {
   email: string;
 }
 
@@ -46,10 +45,24 @@ export default function WorkspaceDetails() {
 
       if (response.ok) {
         const newMember = await response.json();
+        toast("Member added successfully", {
+          description: "Yups",
+          action: {
+            label: "Undo",
+            onClick: () => console.log("Undo"),
+          },
+        });
         setMembers([...members, newMember]);
         return true;
       } else {
         console.log("Error adding member. Try again.");
+        toast("Failed to add member", {
+          description: "Please try again later.",
+          action: {
+            label: "Undo",
+            onClick: () => console.log("Undo"),
+          },
+        });
         return false;
       }
     } catch (error) {
@@ -80,7 +93,7 @@ export default function WorkspaceDetails() {
   if (!workspace) return <p>Loading workspace...</p>;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-2xl mt-14 mx-auto">
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle>{workspace.name}</CardTitle>

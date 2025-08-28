@@ -8,6 +8,7 @@ import { PlusIcon } from 'lucide-react'
 import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 import { useParams } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface Issue {
   id: string;
@@ -38,10 +39,24 @@ export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps
         { headers: { Authorization: `Bearer ${access_token}` } }
       )
 
-      onIssueCreated(data) // ✅ Immediately update parent component
+      onIssueCreated(data) 
       setNewIssue({ title: '', description: '', priority: 'MEDIUM', status: 'TODO' })
-      setIsModalOpen(false) // Close modal
+      setIsModalOpen(false) 
+      toast("Issue created successfully", {
+        description: "You can click to start working on your new issue.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
     } catch (error) {
+      toast("Failed to create issue", {
+        description: "Please try again later.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
       console.error('Error creating issue:', error)
     } finally {
       setLoading(false)

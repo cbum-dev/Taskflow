@@ -39,7 +39,6 @@ export default function AddMemberForm({ workspaceId, setMembers }: AddMemberForm
       
       if (response.ok) {
         const data = await response.json();
-        // Add the new member to the members list
         setMembers(prev => [...prev, data.member]);
         setEmail("");
       } else {

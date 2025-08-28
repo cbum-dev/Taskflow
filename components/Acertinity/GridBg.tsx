@@ -14,7 +14,6 @@ export function GridSmallBackgroundDemo({}) {
           "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]"
         )}
       />
-      {/* Radial gradient for the container to give a faded look */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] dark:bg-black"></div>
       <div className="relative z-10 flex flex-col items-center text-center px-4 py-16 w-full">
         <TypewriterEffectSmoothDemo />{" "}

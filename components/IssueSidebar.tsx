@@ -8,7 +8,6 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -24,12 +23,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "./ui/calendar";
-import axios from "axios";
-import { useAuthStore } from "@/store/authStore";
+import api from "@/services/api";
+import { WorkspaceMember, Issue } from "@/types/types";
+import { toast } from "sonner";
 
-export default function IssueSidebar({ issue, onClose, members, socket }) {
-  const { access_token } = useAuthStore();
-  const [formData, setFormData] = useState({ ...issue });
+export default function IssueSidebar({ issue, onClose, members, socket }: { issue: Issue; onClose: () => void; members: WorkspaceMember[]; socket: any; }) {
+  const [formData, setFormData] = useState<any>({ ...issue });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -40,7 +39,7 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
 
   if (!issue) return null;
 
-  const updateField = (field, value) => {
+  const updateField = (field: string, value: any) => {
     const updated = { ...formData, [field]: value };
     setFormData(updated);
     setHasChanges(true);
@@ -48,11 +47,11 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
 
   const saveAllChanges = async () => {
     if (!hasChanges) return;
-    
+
     try {
-      const changedFields = {};
+      const changedFields: { [key: string]: any } = {};
       Object.keys(formData).forEach(key => {
-        if (formData[key] !== issue[key]) {
+        if (formData[key] !== issue[key as keyof Issue]) {
           changedFields[key] = formData[key];
         }
       });
@@ -61,16 +60,27 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
         setHasChanges(false);
         return;
       }
+      await api.put(`/issues/${issue.id}`, changedFields);
 
-      await axios.put(
-        `http://localhost:3001/api/issues/${issue.id}`,
-        changedFields,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      
       socket.emit("issueUpdated", { id: issue.id, ...changedFields });
+      toast("Issue updated successfully", {
+        description: "You can click to start working on your updated issue.",
+        action: {
+          label: "Close",
+          onClick: () => console.log("Close"),
+        },
+      });
+
       setHasChanges(false);
+      onClose();
     } catch (e) {
+      toast("Failed to update issue", {
+        description: "Please try again later.",
+        action: {
+          label: "Close",
+          onClick: () => console.log("Close"),
+        },
+      });
       console.error(e);
     }
   };
@@ -81,20 +91,16 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
     }
 
     try {
-      await axios.delete(
-        `http://localhost:3001/api/issues/${issue.id}`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      
+      await api.delete(`/issues/${issue.id}`);
       socket.emit("issueDeleted", { id: issue.id });
-      onClose(); 
+      onClose();
     } catch (e) {
       console.error("Error deleting issue:", e);
       alert("Failed to delete issue. Please try again.");
     }
   };
 
-  const handleDateSelect = (date) => {
+  const handleDateSelect = (date: Date | null | undefined) => {
     if (date) {
       const selectedDate = new Date(date);
       selectedDate.setHours(12, 0, 0, 0);
@@ -104,7 +110,7 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
     setIsCalendarOpen(false);
   };
 
-  const formatDisplayDate = (dateString) => {
+  const formatDisplayDate = (dateString: string | null | undefined): string => {
     if (!dateString) return 'No date';
     try {
       const date = new Date(dateString);
@@ -114,17 +120,18 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
         day: 'numeric'
       });
     } catch (error) {
+      console.error("Invalid date:", error);
       return 'No date';
     }
   };
 
-  const getSelectedDate = (dateString) => {
+  const getSelectedDate = (dateString: Date | null | undefined): Date | undefined => {
     if (!dateString) return undefined;
     try {
-      // Create date object and ensure it's in local timezone
       const date = new Date(dateString);
       return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     } catch (error) {
+      console.error("Invalid date:", error);
       return undefined;
     }
   };
@@ -225,14 +232,13 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
         <div>
           <label className="block text-sm font-medium mb-2">Assignees</label>
           <div className="flex flex-wrap gap-2">
-            {members.map((m) => (
+            {members.map((m: WorkspaceMember) => (
               <div
                 key={m.id}
-                className={`px-3 py-1 rounded-full text-sm cursor-pointer ${
-                  formData.assigneeId === m.id
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
+                className={`px-3 py-1 rounded-full text-sm cursor-pointer ${formData.assigneeId === m.id
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+                  }`}
                 onClick={() => updateField("assigneeId", m.id)}
               >
                 {m.name}
@@ -243,14 +249,14 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-gray-200 dark:border-zinc-700 px-6 py-4 flex gap-3">
-        <Button 
-          variant="destructive" 
+        <Button
+          variant="destructive"
           className="flex-1"
           onClick={handleDelete}
         >
           Delete
         </Button>
-        <Button 
+        <Button
           className={`flex-1 ${hasChanges ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
           onClick={saveAllChanges}
           disabled={!hasChanges}

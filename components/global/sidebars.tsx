@@ -12,7 +12,7 @@ import axios from 'axios'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
 import { io } from "socket.io-client";
-
+import {toast} from "sonner";
 interface Workspace {
   id: string;
   name: string;
@@ -43,10 +43,6 @@ export function AppSidebar() {
         headers: { Authorization: `Bearer ${access_token}` }
       })
       setProjects(data.data || [])
-
-      // if (data.data.length > 0) {
-      //   router.push(`/dashboard/${workspaceId}/${data.data[0].id}`)
-      // }
     } catch (error) {
       console.error("Error fetching projects:", error)
     }
@@ -115,6 +111,13 @@ export function AppSidebar() {
       )
       setWorkspaces((prev) => [...prev, data])
       setNewWorkspaceName("")
+      toast("Workspace created successfully", {
+        description: "You can click to start working on your new workspace.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
     } catch (error) {
       console.error("Error adding workspace:", error)
     }
@@ -132,10 +135,22 @@ export function AppSidebar() {
       
       setNewProjectName("");
       socket.emit("projectCreated", { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id });
-      // Refetch projects for the current workspace
       await fetchProjects(selectedWorkspace.id);
-      
+      toast("Project created successfully", {
+        description: "You can click to start working on your new project.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
     } catch (error) {
+      toast("Failed to create project", {
+        description: "Please try again later.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
       console.error("Error adding project:", error);
     }
   };

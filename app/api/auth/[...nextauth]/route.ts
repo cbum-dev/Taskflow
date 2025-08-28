@@ -3,7 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
-// Define a type for the authenticated user
 interface AuthUser {
   id: string;
   token: string;
@@ -12,7 +11,6 @@ interface AuthUser {
   image?: string;
 }
 
-// Extend the built-in session and user types
 declare module "next-auth" {
   interface User {
     id: string;
@@ -28,7 +26,6 @@ declare module "next-auth" {
   }
 }
 
-// Define NextAuth options
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -97,6 +94,5 @@ const authOptions: NextAuthOptions = {
   pages: { signIn: "/auth/login" },
 };
 
-// Export as NextAuth handler
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

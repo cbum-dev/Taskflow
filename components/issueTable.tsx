@@ -9,36 +9,34 @@ import { filterAndSortIssues } from "./utils";
 import IssueSidebar from "./IssueSidebar";
 import IssueTableControls from "./IssueTableControls";
 import { Checkbox } from "@/components/ui/checkbox";
+import api from "@/services/api";
+import { Issue } from "@/types/types";
+import { toast } from "sonner";
 
 const socket = io("http://localhost:3001");
 
 export default function IssueTable() {
   const { projectId, workspaceId } = useParams();
   const { access_token } = useAuthStore();
-
-  const [issues, setIssues] = useState([]);
+  const [issues, setIssues] = useState<Issue[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("");
-  const [sortBy, setSortBy] = useState(null);
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [sidebarIssue, setSidebarIssue] = useState(null);
 
   useEffect(() => {
     if (!access_token || !projectId || !workspaceId) return;
 
-    axios
-      .get(`http://localhost:3001/api/issues/project/${projectId}`, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
+    api
+      .get(`/issues/project/${projectId}`)
       .then((res) => setIssues(res.data.data || []))
       .catch(console.error);
 
-    axios
-      .get(`http://localhost:3001/api/workspace/${workspaceId}/members`, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
+    api
+      .get(`/workspace/${workspaceId}/members`)
       .then((res) => setWorkspaceMembers(res.data.data || []))
       .catch(console.error);
 
@@ -48,10 +46,10 @@ export default function IssueTable() {
     socket.on("issueUpdated", (updatedIssue) =>
       setIssues((prev) => prev.map((i) => (i.id === updatedIssue.id ? updatedIssue : i)))
     );
-      socket.on("issueDeleted", (deleted) => {
-        const id = typeof deleted === "object" ? deleted.id : deleted;
-        setIssues((prev) => prev.filter((i) => i.id !== id));
-      });
+    socket.on("issueDeleted", (deleted) => {
+      const id = typeof deleted === "object" ? deleted.id : deleted;
+      setIssues((prev) => prev.filter((i) => i.id !== id));
+    });
 
 
 
@@ -69,13 +67,14 @@ export default function IssueTable() {
         search,
         statusFilter,
         assigneeFilter,
+        // @ts-ignore
         sortBy,
         sortOrder
       ),
     [issues, search, statusFilter, assigneeFilter, sortBy, sortOrder]
   );
 
-  const onCheckboxToggle = async (issue) => {
+  const onCheckboxToggle = async (issue: Issue) => {
     const newStatus = issue.status === "DONE" ? "IN_PROGRESS" : "DONE";
     try {
       await axios.put(
@@ -84,7 +83,21 @@ export default function IssueTable() {
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
       socket.emit("issueUpdated", { ...issue, status: newStatus });
+      toast("Issue status updated", {
+        description: "You can click to start working on your updated issue.",
+        action: {
+          label: "Close",
+          onClick: () => console.log("Close"),
+        },
+      });
     } catch (e) {
+      toast("Failed to update issue", {
+        description: "Please try again later.",
+        action: {
+          label: "Close",
+          onClick: () => console.log("Close"),
+        },
+      });
       console.error(e);
     }
   };
@@ -108,7 +121,7 @@ export default function IssueTable() {
           sortOrder={sortOrder}
           setSortBy={setSortBy}
           setSortOrder={setSortOrder}
-        />      
+        />
         <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 mt-4">
           <table className="min-w-full text-left">
             <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
@@ -129,10 +142,10 @@ export default function IssueTable() {
                   </td>
                 </tr>
               ) : (
-                displayedIssues.map((issue) => (
+                displayedIssues.map((issue: Issue) => (
                   <tr
                     key={issue.id}
-                    onClick={() => setSidebarIssue(issue)}
+                    onClick={() => setSidebarIssue(issue as any)}
                     className="hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
                   >
                     <td
@@ -148,12 +161,12 @@ export default function IssueTable() {
                     <td className="p-2">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${issue.status === "DONE"
-                            ? "bg-green-100 text-green-700"
-                            : issue.status === "IN_PROGRESS"
-                              ? "bg-blue-100 text-blue-700"
-                              : issue.status === "IN_REVIEW"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-gray-100 text-gray-700"
+                          ? "bg-green-100 text-green-700"
+                          : issue.status === "IN_PROGRESS"
+                            ? "bg-blue-100 text-blue-700"
+                            : issue.status === "IN_REVIEW"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-700"
                           }`}
                       >
                         {issue.status}
@@ -162,24 +175,31 @@ export default function IssueTable() {
                     <td className="p-2">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${issue.priority === "URGENT"
-                            ? "bg-red-100 text-red-700"
-                            : issue.priority === "HIGH"
-                              ? "bg-orange-100 text-orange-700"
-                              : issue.priority === "MEDIUM"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-green-100 text-green-700"
+                          ? "bg-red-100 text-red-700"
+                          : issue.priority === "HIGH"
+                            ? "bg-orange-100 text-orange-700"
+                            : issue.priority === "MEDIUM"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
                           }`}
                       >
                         {issue.priority}
                       </span>
                     </td>
                     <td className="p-2">
-                      {issue.assignee?.name ? (
+                      {typeof issue.assignee === "object" && issue.assignee !== null && "name" in issue.assignee ? (
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">
-                            {issue.assignee.name[0]}
+                            {(issue.assignee as { name: string }).name[0]}
                           </div>
-                          {issue.assignee.name}
+                          {(issue.assignee as { name: string }).name}
+                        </div>
+                      ) : typeof issue.assignee === "string" && issue.assignee ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">
+                            {issue.assignee[0]}
+                          </div>
+                          {issue.assignee}
                         </div>
                       ) : (
                         <span className="text-gray-400 italic">Unassigned</span>

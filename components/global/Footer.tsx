@@ -24,7 +24,6 @@ import {
       <footer className="bg-background border-t">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Company Info */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">TaskFlow</h3>
               <p className="text-muted-foreground">
@@ -47,7 +46,6 @@ import {
               </div>
             </div>
   
-            {/* Quick Links */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Quick Links</h3>
               <ul className="space-y-2 text-muted-foreground">
@@ -74,7 +72,6 @@ import {
               </ul>
             </div>
   
-            {/* Resources */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Resources</h3>
               <ul className="space-y-2 text-muted-foreground">
@@ -101,7 +98,6 @@ import {
               </ul>
             </div>
   
-            {/* Newsletter */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Stay Updated</h3>
               <p className="text-muted-foreground">

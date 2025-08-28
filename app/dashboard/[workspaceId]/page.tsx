@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import {
   Card,
   CardHeader,
@@ -22,29 +22,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { io } from "socket.io-client";
+import { Project,Workspace } from "@/types/types";
+import api from "@/services/api";
+import {toast} from "sonner";
 
 const socket = io('http://localhost:3001')
-type Project = {
-  id: string;
-  name: string;
-  description: string;
-  members: number;
-  issues: number;
-  lastUpdated: string;
-  avatar?: string;
-};
-
-type Workspace = {
-  id: string;
-  name: string;
-  description?: string;
-};
 
 export default function WorkspaceDashboard() {
   const params = useParams();
@@ -52,7 +39,7 @@ export default function WorkspaceDashboard() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, access_token } = useAuthStore();
+  const { user } = useAuthStore();
   const [openDialog, setOpenDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
@@ -61,25 +48,39 @@ export default function WorkspaceDashboard() {
 
   const fetchWorkspace = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:3001/api/workspace/${workspaceId}`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      setWorkspace(res.data.data || null);
+      setLoading(true);
+      const { data } = await api.get(`/workspace/${workspaceId}`);
+      setWorkspace(data.data);
+      setProjects(data.data.projects || []);
     } catch (error) {
+      toast("Failed to load workspace", {
+        description: "Please try again later.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
       console.error("Error fetching workspace:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
   const fetchProjects = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:3001/api/projects/workspace/${workspaceId}`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      setProjects(res.data.data || []);
+      const { data } = await api.get(`/projects/workspace/${workspaceId}`);
+      setProjects(data.data || []);
     } catch (error) {
+      toast("Failed to load projects", {
+        description: "Please try again later.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
       console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -95,23 +96,36 @@ export default function WorkspaceDashboard() {
     setCreatingProject(true);
     setError("");
     try {
-      const {data} = await axios.post(
-        "http://localhost:3001/api/projects",
+      const { data } = await api.post(
+        "/projects",
         {
           name: newProjectName,
           description: newProjectDescription,
           workspaceId: workspaceId,
           ownerId: user?.id,
-        },
-        { headers: { Authorization: `Bearer ${access_token}` } }
+        }
       );
       setNewProjectName("");
       setNewProjectDescription("");
       socket.emit("projectCreated", data);
+      console.log("Project created:", data);
+      toast("Project created successfully", {
+        description: "Sunday, December 03, 2023 at 9:00 AM",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
       setOpenDialog(false);
       fetchAll();
     } catch (err) {
-      setError("Failed to create project");
+      toast("Failed to create project", {
+        description: "Please try again later.",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
       console.error(err);
     } finally {
       setCreatingProject(false);

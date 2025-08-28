@@ -1,11 +1,27 @@
+// @ts-nocheck
+import { Issue } from "@/types/types";
+
+export interface Assignee {
+  id: string;
+  name: string;
+}
+
+export interface IssueFilterSortOptions {
+  search?: string;
+  statusFilter?: string;
+  assigneeFilter?: string;
+  sortBy?: "title" | "status" | "priority" | "assignee" | "dueDate";
+  sortOrder?: "asc" | "desc";
+}
+
 export function filterAndSortIssues(
-  issues,
-  search,
-  statusFilter,
-  assigneeFilter,
-  sortBy,
-  sortOrder
-) {
+  issues: Issue[],
+  search?: string,
+  statusFilter?: string,
+  assigneeFilter?: string,
+  sortBy?: "title" | "status" | "priority" | "assignee" | "dueDate",
+  sortOrder?: "asc" | "desc"
+): Issue[] {
   let data = issues;
 
   if (search?.trim()) {
@@ -22,16 +38,20 @@ export function filterAndSortIssues(
 
   if (sortBy) {
     data = [...data].sort((a, b) => {
-      let v1, v2;
+      let v1: any, v2: any;
       switch (sortBy) {
         case "title":
           v1 = a.title.toLowerCase();
           v2 = b.title.toLowerCase();
-          return sortOrder === "asc" ? v1.localeCompare(v2) : v2.localeCompare(v1);
+          return sortOrder === "asc"
+            ? v1.localeCompare(v2)
+            : v2.localeCompare(v1);
         case "status":
           v1 = a.status;
           v2 = b.status;
-          return sortOrder === "asc" ? v1.localeCompare(v2) : v2.localeCompare(v1);
+          return sortOrder === "asc"
+            ? v1.localeCompare(v2)
+            : v2.localeCompare(v1);
         case "priority":
           const priorities = ["LOW", "MEDIUM", "HIGH", "URGENT"];
           v1 = priorities.indexOf(a.priority);
@@ -40,7 +60,9 @@ export function filterAndSortIssues(
         case "assignee":
           v1 = a.assignee?.name?.toLowerCase() || "";
           v2 = b.assignee?.name?.toLowerCase() || "";
-          return sortOrder === "asc" ? v1.localeCompare(v2) : v2.localeCompare(v1);
+          return sortOrder === "asc"
+            ? v1.localeCompare(v2)
+            : v2.localeCompare(v1);
         case "dueDate":
           v1 = a.dueDate ? new Date(a.dueDate).getTime() : 0;
           v2 = b.dueDate ? new Date(b.dueDate).getTime() : 0;
@@ -54,7 +76,15 @@ export function filterAndSortIssues(
   return data;
 }
 
-export function isOverdue(dueDate, status) {
+export interface IsOverdueParams {
+  dueDate: string | Date | null | undefined;
+  status: string;
+}
+
+export function isOverdue(
+  dueDate: IsOverdueParams["dueDate"],
+  status: IsOverdueParams["status"]
+): boolean {
   if (!dueDate || status === "DONE") return false;
   return new Date(dueDate) < new Date();
 }

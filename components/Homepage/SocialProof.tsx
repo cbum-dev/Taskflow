@@ -62,11 +62,9 @@ const SocialProof = () => {
 
   return (
     <section className="py-24 bg-gray-50 w-full dark:bg-neutral-950  relative">
-      {/* Background pattern - different for light/dark */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
 
       <div className="container mx-auto px-6 relative">
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
           {stats.map((stat, index) => (
             <Card
@@ -86,7 +84,6 @@ const SocialProof = () => {
           ))}
         </div>
 
-        {/* Trusted by */}
         <div className="text-center mb-16">
           <Badge
             variant="outline"
@@ -113,7 +110,6 @@ const SocialProof = () => {
           </div>
         </div>
 
-        {/* Testimonials */}
         <div className="text-center mb-12">
           <Badge
             variant="outline"

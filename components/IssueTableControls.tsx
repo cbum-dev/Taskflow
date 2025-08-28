@@ -18,15 +18,15 @@ interface Props {
   search: string;
   setSearch: (v: string) => void;
 
-  statusFilter: string; // "", "TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"
+  statusFilter: string;
   setStatusFilter: (v: string) => void;
 
-  assigneeFilter: string; // "" or member.id
+  assigneeFilter: string;
   setAssigneeFilter: (v: string) => void;
 
   members: Member[];
 
-  sortBy: string | null; // e.g. "createdAt" | "title" | "status" | "priority" | "dueDate" | null
+  sortBy: string | null;
   sortOrder: "asc" | "desc";
   setSortBy: (v: string | null) => void;
   setSortOrder: (v: "asc" | "desc") => void;
@@ -58,7 +58,6 @@ export default function IssueTableControls({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 p-3 border rounded-lg bg-muted/30">
-      {/* Left: Search */}
       <div className="flex items-center gap-3">
         <Input
           placeholder="Search issues…"
@@ -67,7 +66,6 @@ export default function IssueTableControls({
           className="w-[220px]"
         />
 
-        {/* Status filter */}
         <Select
           value={statusFilter || undefined}
           onValueChange={(val) =>
@@ -87,7 +85,6 @@ export default function IssueTableControls({
           </SelectContent>
         </Select>
 
-        {/* Assignee filter */}
         <Select
           value={assigneeFilter || undefined}
           onValueChange={(val) =>
@@ -108,7 +105,6 @@ export default function IssueTableControls({
         </Select>
       </div>
 
-      {/* Right: Sort + Clear */}
       <div className="flex items-center gap-2">
         <Select
           value={sortBy ?? undefined}

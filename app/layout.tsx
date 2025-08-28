@@ -4,6 +4,9 @@ import "./globals.css";
 import SessionWrappper from "./component/SessionWrappper";
 import Navbar from "@/components/global/Navbar";
 import ThemeProvider from "@/components/Themprovider";
+import { Toaster } from "@/components/ui/sonner"
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -36,6 +39,7 @@ export default function RootLayout({
           </ThemeProvider>
         </body>
       </SessionWrappper>
+      <Toaster />
     </html>
   );
 }

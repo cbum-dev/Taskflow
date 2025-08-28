@@ -39,7 +39,7 @@ export default function CreateWorkspacePage() {
 
     if (response.ok) {
       const data = await response.json();
-      router.push(`/workspace/${data.data.id}`); // Redirect to the workspace page
+      router.push(`/workspace/${data.data.id}`); 
     } else {
       setError("Error creating workspace. Try again.");
     }
