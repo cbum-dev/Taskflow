@@ -50,7 +50,6 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
     if (!hasChanges) return;
     
     try {
-      // Get only the changed fields by comparing with original issue
       const changedFields = {};
       Object.keys(formData).forEach(key => {
         if (formData[key] !== issue[key]) {
@@ -76,12 +75,30 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this issue? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:3001/api/issues/${issue.id}`,
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      
+      socket.emit("issueDeleted", { id: issue.id });
+      onClose(); 
+    } catch (e) {
+      console.error("Error deleting issue:", e);
+      alert("Failed to delete issue. Please try again.");
+    }
+  };
+
   const handleDateSelect = (date) => {
     if (date) {
-      // Set time to noon to avoid timezone issues, then convert to ISO string
       const selectedDate = new Date(date);
-      selectedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone offset issues
-      const formattedDate = selectedDate.toISOString(); // Full ISO string format
+      selectedDate.setHours(12, 0, 0, 0);
+      const formattedDate = selectedDate.toISOString();
       updateField("dueDate", formattedDate);
     }
     setIsCalendarOpen(false);
@@ -226,7 +243,11 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-gray-200 dark:border-zinc-700 px-6 py-4 flex gap-3">
-        <Button variant="destructive" className="flex-1">
+        <Button 
+          variant="destructive" 
+          className="flex-1"
+          onClick={handleDelete}
+        >
           Delete
         </Button>
         <Button 

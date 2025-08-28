@@ -48,9 +48,12 @@ export default function IssueTable() {
     socket.on("issueUpdated", (updatedIssue) =>
       setIssues((prev) => prev.map((i) => (i.id === updatedIssue.id ? updatedIssue : i)))
     );
-    socket.on("issueDeleted", (deletedId) =>
-      setIssues((prev) => prev.filter((i) => i.id !== deletedId))
-    );
+      socket.on("issueDeleted", (deleted) => {
+        const id = typeof deleted === "object" ? deleted.id : deleted;
+        setIssues((prev) => prev.filter((i) => i.id !== id));
+      });
+
+
 
     return () => {
       socket.off("issueCreated");
