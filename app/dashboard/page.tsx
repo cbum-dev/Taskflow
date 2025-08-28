@@ -96,8 +96,8 @@ const teamMembers = [
 
 export default function Dashboard() {
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="flex flex-col gap-4 p-4 md:p-6 h-screen overflow-scroll">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 overflow-auto">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Issues</CardTitle>

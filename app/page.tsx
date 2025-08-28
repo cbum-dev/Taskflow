@@ -10,6 +10,7 @@ import PricingPreview from '@/components/Homepage/Pricing';
 import CTAFooter from '@/components/Homepage/CTA'
 import { Footer } from '@/components/global/Footer'
 import { useSession } from 'next-auth/react';
+import HealthCheckAlert from '@/components/HealthCheckAlert';
 
 export default function HomePage() {
   const {data : session} = useSession()
@@ -17,6 +18,7 @@ export default function HomePage() {
   return (
     <div className="relative overflow-scroll  flex flex-col items-center justify-center dark:bg-black text-gray-900 dark:text-white transition-colors duration-300 ">
       <GridSmallBackgroundDemo  />
+      <HealthCheckAlert/>
       {session && <Dashboard/>}
       <FeatureGrid/>
       <HowItWorks/>
