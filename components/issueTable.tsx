@@ -86,122 +86,127 @@ export default function IssueTable() {
     }
   };
 
-  
-  return (
-    <div className="p-4 bg-white rounded-xl shadow dark:bg-gray-900">
-      <IssueTableControls
-        search={search}
-        setSearch={setSearch}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        assigneeFilter={assigneeFilter}
-        setAssigneeFilter={setAssigneeFilter}
-        members={workspaceMembers}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        setSortBy={setSortBy}
-        setSortOrder={setSortOrder}
-      />
-  {sidebarIssue && (
-    <div className="fixed inset-y-0 right-0 w-[350px] z-50 bg-white dark:bg-gray-900 shadow-lg border-l border-gray-200 dark:border-gray-700">
 
-      <IssueSidebar
-        issue={sidebarIssue}
-        onClose={() => setSidebarIssue(null)}
-        members={workspaceMembers}
-        socket={socket}
-      />
-    </div>
-  )}
-      <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 mt-4">
-        <table className="min-w-full text-left">
-          <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
-            <tr>
-              <th className="p-2 w-10">Done</th>
-              <th className="p-2">Title</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Priority</th>
-              <th className="p-2">Assignee</th>
-              <th className="p-2">Due Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedIssues.length === 0 ? (
+  return (
+    <div >
+      <div
+        className={`transition-all duration-300 ${sidebarIssue ? "w-[calc(100%-400px)]" : "w-full"
+          }`}
+      >
+        <IssueTableControls
+          search={search}
+          setSearch={setSearch}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          assigneeFilter={assigneeFilter}
+          setAssigneeFilter={setAssigneeFilter}
+          members={workspaceMembers}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          setSortBy={setSortBy}
+          setSortOrder={setSortOrder}
+        />      
+        <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 mt-4">
+          <table className="min-w-full text-left">
+            <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
               <tr>
-                <td colSpan={6} className="text-center p-6 text-gray-500">
-                  No issues found.
-                </td>
+                <th className="p-2 w-10"> </th>
+                <th className="p-2">Title</th>
+                <th className="p-2">Status</th>
+                <th className="p-2">Priority</th>
+                <th className="p-2">Assignee</th>
+                <th className="p-2">Due Date</th>
               </tr>
-            ) : (
-              displayedIssues.map((issue) => (
-                <tr
-                  key={issue.id}
-                  onClick={() => setSidebarIssue(issue)}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
-                >
-                  <td
-                    className="p-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCheckboxToggle(issue);
-                    }}
-                  >
-                    <Checkbox checked={issue.status === "DONE"} />
-                  </td>
-                  <td className="p-2 font-medium">{issue.title}</td>
-                  <td className="p-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        issue.status === "DONE"
-                          ? "bg-green-100 text-green-700"
-                          : issue.status === "IN_PROGRESS"
-                          ? "bg-blue-100 text-blue-700"
-                          : issue.status === "IN_REVIEW"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {issue.status.toLowerCase()}
-                    </span>
-                  </td>
-                  <td className="p-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        issue.priority === "URGENT"
-                          ? "bg-red-100 text-red-700"
-                          : issue.priority === "HIGH"
-                          ? "bg-orange-100 text-orange-700"
-                          : issue.priority === "MEDIUM"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {issue.priority.toLowerCase()}
-                    </span>
-                  </td>
-                  <td className="p-2">
-                    {issue.assignee?.name ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">
-                          {issue.assignee.name[0]}
-                        </div>
-                        {issue.assignee.name}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 italic">Unassigned</span>
-                    )}
-                  </td>
-                  <td className="p-2 text-sm text-gray-600">
-                    {issue.dueDate
-                      ? new Date(issue.dueDate).toLocaleDateString()
-                      : "N/A"}
+            </thead>
+            <tbody>
+              {displayedIssues.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center p-6 text-gray-500">
+                    No issues found.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                displayedIssues.map((issue) => (
+                  <tr
+                    key={issue.id}
+                    onClick={() => setSidebarIssue(issue)}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                  >
+                    <td
+                      className="p-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCheckboxToggle(issue);
+                      }}
+                    >
+                      <Checkbox checked={issue.status === "DONE"} />
+                    </td>
+                    <td className="p-2 font-medium">{issue.title}</td>
+                    <td className="p-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${issue.status === "DONE"
+                            ? "bg-green-100 text-green-700"
+                            : issue.status === "IN_PROGRESS"
+                              ? "bg-blue-100 text-blue-700"
+                              : issue.status === "IN_REVIEW"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-gray-100 text-gray-700"
+                          }`}
+                      >
+                        {issue.status}
+                      </span>
+                    </td>
+                    <td className="p-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${issue.priority === "URGENT"
+                            ? "bg-red-100 text-red-700"
+                            : issue.priority === "HIGH"
+                              ? "bg-orange-100 text-orange-700"
+                              : issue.priority === "MEDIUM"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-green-100 text-green-700"
+                          }`}
+                      >
+                        {issue.priority}
+                      </span>
+                    </td>
+                    <td className="p-2">
+                      {issue.assignee?.name ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">
+                            {issue.assignee.name[0]}
+                          </div>
+                          {issue.assignee.name}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="p-2 text-sm text-gray-600">
+                      {issue.dueDate
+                        ? new Date(issue.dueDate).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {sidebarIssue && (
+        <div className="fixed bottom-0 inset-y-0 right-0 w-[350px] z-50 bg-white dark:bg-gray-900 shadow-lg border-l border-gray-200 dark:border-gray-700">
+
+          <IssueSidebar
+            issue={sidebarIssue}
+            onClose={() => setSidebarIssue(null)}
+            members={workspaceMembers}
+            socket={socket}
+          />
+        </div>
+      )}
+
     </div>
   );
 }

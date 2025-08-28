@@ -17,48 +17,105 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CalendarIcon } from "lucide-react";
+import { Calendar } from "./ui/calendar";
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 
 export default function IssueSidebar({ issue, onClose, members, socket }) {
   const { access_token } = useAuthStore();
   const [formData, setFormData] = useState({ ...issue });
-  const [comment, setComment] = useState("");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     setFormData({ ...issue });
+    setHasChanges(false);
   }, [issue]);
 
   if (!issue) return null;
 
-  const saveField = async (field, value) => {
+  const updateField = (field, value) => {
+    const updated = { ...formData, [field]: value };
+    setFormData(updated);
+    setHasChanges(true);
+  };
+
+  const saveAllChanges = async () => {
+    if (!hasChanges) return;
+    
     try {
-      const updated = { ...formData, [field]: value };
-      setFormData(updated);
+      // Get only the changed fields by comparing with original issue
+      const changedFields = {};
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== issue[key]) {
+          changedFields[key] = formData[key];
+        }
+      });
+
+      if (Object.keys(changedFields).length === 0) {
+        setHasChanges(false);
+        return;
+      }
+
       await axios.put(
         `http://localhost:3001/api/issues/${issue.id}`,
-        { [field]: value },
+        changedFields,
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
-      socket.emit("issueUpdated", { id: issue.id, [field]: value });
+      
+      socket.emit("issueUpdated", { id: issue.id, ...changedFields });
+      setHasChanges(false);
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleComment = () => {
-    if (!comment.trim()) return;
-    // TODO: push comment to backend
-    console.log("Comment posted:", comment);
-    setComment("");
+  const handleDateSelect = (date) => {
+    if (date) {
+      // Set time to noon to avoid timezone issues, then convert to ISO string
+      const selectedDate = new Date(date);
+      selectedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone offset issues
+      const formattedDate = selectedDate.toISOString(); // Full ISO string format
+      updateField("dueDate", formattedDate);
+    }
+    setIsCalendarOpen(false);
+  };
+
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return 'No date';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'No date';
+    }
+  };
+
+  const getSelectedDate = (dateString) => {
+    if (!dateString) return undefined;
+    try {
+      // Create date object and ensure it's in local timezone
+      const date = new Date(dateString);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    } catch (error) {
+      return undefined;
+    }
   };
 
   return (
     <Sidebar
       side="right"
-      open={true}
-      className="bg-white dark:bg-zinc-900 w-full sm:max-w-sm flex flex-col rounded-l-xl shadow-lg"
+      className="bg-white h-[calc(100vh-3rem)] dark:bg-zinc-900 w-full sm:max-w-sm flex flex-col rounded-l-xl shadow-lg"
     >
       <SidebarHeader className="border-b border-gray-200 dark:border-zinc-700 px-6 py-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">{formData.title}</h2>
@@ -68,24 +125,22 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
       </SidebarHeader>
 
       <SidebarContent className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-        {/* Description */}
         <div>
           <label className="block text-sm font-medium mb-1">Description</label>
           <Textarea
             rows={4}
             value={formData.description || ""}
-            onChange={(e) => saveField("description", e.target.value)}
+            onChange={(e) => updateField("description", e.target.value)}
             placeholder="Add a description"
           />
         </div>
 
-        {/* Status + Priority */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Status</label>
             <Select
               value={formData.status || ""}
-              onValueChange={(val) => saveField("status", val)}
+              onValueChange={(val) => updateField("status", val)}
             >
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -101,7 +156,7 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
             <label className="block text-sm font-medium mb-1">Priority</label>
             <Select
               value={formData.priority || ""}
-              onValueChange={(val) => saveField("priority", val)}
+              onValueChange={(val) => updateField("priority", val)}
             >
               <SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
@@ -115,21 +170,41 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
           </div>
         </div>
 
-        {/* Due Date */}
         <div>
           <label className="block text-sm font-medium mb-1">Due Date</label>
-          <div className="relative">
-            <Input
-              type="date"
-              value={formData.dueDate ? formData.dueDate.split("T")[0] : ""}
-              onChange={(e) => saveField("dueDate", e.target.value)}
-              className="pr-10"
-            />
-            <CalendarIcon className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
-          </div>
+          <DropdownMenu open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                {formatDisplayDate(formData.dueDate)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={getSelectedDate(formData.dueDate)}
+                onSelect={handleDateSelect}
+                initialFocus
+              />
+              {formData.dueDate && (
+                <div className="p-2 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      updateField("dueDate", null);
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    Clear Date
+                  </Button>
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Assignees */}
         <div>
           <label className="block text-sm font-medium mb-2">Assignees</label>
           <div className="flex flex-wrap gap-2">
@@ -141,24 +216,11 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-700"
                 }`}
-                onClick={() => saveField("assigneeId", m.id)}
+                onClick={() => updateField("assigneeId", m.id)}
               >
                 {m.name}
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Comments */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Comments</label>
-          <div className="space-y-2">
-            <Textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Write a comment..."
-            />
-            <Button onClick={handleComment}>Post Comment</Button>
           </div>
         </div>
       </SidebarContent>
@@ -167,7 +229,13 @@ export default function IssueSidebar({ issue, onClose, members, socket }) {
         <Button variant="destructive" className="flex-1">
           Delete
         </Button>
-        <Button className="flex-1">Done</Button>
+        <Button 
+          className={`flex-1 ${hasChanges ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+          onClick={saveAllChanges}
+          disabled={!hasChanges}
+        >
+          {hasChanges ? 'Save Changes' : 'Done'}
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );

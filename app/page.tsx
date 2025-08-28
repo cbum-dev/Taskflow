@@ -15,7 +15,7 @@ export default function HomePage() {
   const {data : session} = useSession()
 
   return (
-    <div className="relative  flex flex-col items-center justify-center dark:bg-black text-gray-900 dark:text-white transition-colors duration-300 ">
+    <div className="relative overflow-scroll  flex flex-col items-center justify-center dark:bg-black text-gray-900 dark:text-white transition-colors duration-300 ">
       <GridSmallBackgroundDemo  />
       {session && <Dashboard/>}
       <FeatureGrid/>

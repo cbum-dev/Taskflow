@@ -142,7 +142,7 @@ export function AppSidebar() {
 
 
   return (
-    <Sidebar variant="inset" id="hiiii" className="h-[90vh]">
+    <Sidebar variant="inset" id="hiiii" className="h-[95vh]">
       <SidebarContent>
         <div className="flex items-center justify-between p-4 border-b">
           {user && (
