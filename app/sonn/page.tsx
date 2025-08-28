@@ -1,12 +1,39 @@
 "use client"
 
 import { toast } from "sonner"
-
+import api from "@/services/api"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 
 export default function Page() {
+    const [user, setUser] = useState<any[]>([])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await api.get("/user");
+                // Ensure response.data is always an array
+                console.log(response)
+
+                setUser(Array.isArray(response.data.data) ? response.data.data : []);
+            } catch (error) {
+                toast("Failed to fetch users");
+                console.error("Error fetching users:", error);
+            }
+        };
+        fetchData();
+    }, []);
+
+
+
   return (
-    <Button
+    <div>
+        <h1>User List</h1>
+        <ul>
+            {user.map((u) => (
+                <li key={u.id}>{u.name}</li>
+            ))}
+        </ul>    <Button
     className="mt-14"
       variant="outline"
       onClick={() =>
@@ -21,5 +48,7 @@ export default function Page() {
     >
       Show Toast
     </Button>
+    </div>
+
   )
 }
