@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-
+import api from "@/services/api";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,15 +19,11 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    const response = await fetch("http://localhost:3001/api/user/register", {
-      method: "POST",
-      body: JSON.stringify({ email, password, name }),
-      headers: { "Content-Type": "application/json" },
-    });
+    const { data } = await api.post("/user/register", { email, password, name });
 
     setLoading(false);
 
-    if (response.ok) {
+    if (data) {
       router.push("api/auth/login");
     } else {
       setError("Error registering user. Please try again.");

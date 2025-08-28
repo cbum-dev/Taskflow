@@ -8,11 +8,11 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Separator } from '@/components/ui/separator'
 import { PlusIcon, FolderIcon, ChevronDownIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import axios from 'axios'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
 import { io } from "socket.io-client";
 import {toast} from "sonner";
+import api from '@/services/api'
 interface Workspace {
   id: string;
   name: string;
@@ -39,9 +39,7 @@ export function AppSidebar() {
   const fetchProjects = useCallback(async (workspaceId: string) => {
     if (!access_token) return
     try {
-      const { data } = await axios.get(`http://localhost:3001/api/projects/workspace/${workspaceId}`, {
-        headers: { Authorization: `Bearer ${access_token}` }
-      })
+      const { data } = await api.get(`/projects/workspace/${workspaceId}`)
       setProjects(data.data || [])
     } catch (error) {
       console.error("Error fetching projects:", error)
@@ -51,9 +49,7 @@ export function AppSidebar() {
     const fetchWorkspaces = async () => {
       if (!access_token) return
       try {
-        const { data } = await axios.get("http://localhost:3001/api/workspace/user", {
-          headers: { Authorization: `Bearer ${access_token}` }
-        })
+        const { data } = await api.get("/workspace/user")
         setWorkspaces(data.data || [])
 
         const workspaceIdFromUrl = pathname.split('/')[2];
@@ -104,11 +100,7 @@ export function AppSidebar() {
     if (!newWorkspaceName.trim()) return
 
     try {
-      const { data } = await axios.post(
-        "http://localhost:3001/api/workspace",
-        { name: newWorkspaceName },
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      )
+      const { data } = await api.post("/workspace", { name: newWorkspaceName })
       setWorkspaces((prev) => [...prev, data])
       setNewWorkspaceName("")
       toast("Workspace created successfully", {
@@ -127,12 +119,7 @@ export function AppSidebar() {
     if (!newProjectName.trim() || !selectedWorkspace) return;
   
     try {
-      await axios.post(
-        "http://localhost:3001/api/projects",
-        { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id },
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      
+      await api.post("/projects", { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id });
       setNewProjectName("");
       socket.emit("projectCreated", { name: newProjectName, workspaceId: selectedWorkspace.id, ownerId: user?.id });
       await fetchProjects(selectedWorkspace.id);

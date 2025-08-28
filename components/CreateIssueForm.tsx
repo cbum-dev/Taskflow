@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PlusIcon } from 'lucide-react'
-import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
+import api from '@/services/api'
 
 interface Issue {
   id: string;
@@ -23,7 +23,7 @@ interface CreateIssueFormProps {
 }
 
 export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps) {
-  const { access_token, user } = useAuthStore()
+  const {  user } = useAuthStore()
   const { projectId } = useParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newIssue, setNewIssue] = useState({ title: '', description: '', priority: 'MEDIUM', status: 'TODO' })
@@ -33,13 +33,8 @@ export default function CreateIssueForm({ onIssueCreated }: CreateIssueFormProps
     if (!newIssue.title.trim()) return
     setLoading(true)
     try {
-      const { data } = await axios.post(
-        'http://localhost:3001/api/issues',
-        { ...newIssue, projectId, reporterId: user?.id },
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      )
-
-      onIssueCreated(data) 
+      const { data } = await api.post('/issues', { ...newIssue, projectId, reporterId: user?.id })
+      onIssueCreated(data)
       setNewIssue({ title: '', description: '', priority: 'MEDIUM', status: 'TODO' })
       setIsModalOpen(false) 
       toast("Issue created successfully", {

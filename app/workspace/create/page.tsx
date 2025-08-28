@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
+import api from "@/services/api";
 
 export default function CreateWorkspacePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { user, access_token } = useAuthStore();
+  const { user } = useAuthStore();
   const router = useRouter();
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
@@ -26,20 +27,12 @@ export default function CreateWorkspacePage() {
       return;
     }
 
-    const response = await fetch("http://localhost:3001/api/workspace", {
-      method: "POST",
-      body: JSON.stringify({ name, description }),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
+    const { data } = await api.post("/workspace", { name, description });
 
     setLoading(false);
 
-    if (response.ok) {
-      const data = await response.json();
-      router.push(`/workspace/${data.data.id}`); 
+    if (data) {
+      router.push(`/workspace/${data.data.id}`);
     } else {
       setError("Error creating workspace. Try again.");
     }

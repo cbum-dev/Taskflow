@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { PlusIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import api from "@/services/api";
 interface Workspace {
   id: string;
   name: string;
@@ -23,13 +24,8 @@ export default function WorkspacesList() {
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const response = await fetch("http://localhost:3001/api/workspace/user", {
-          headers: { Authorization: `Bearer ${access_token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setWorkspaces(data.data);
-        }
+        const { data } = await api.get("/workspace/user");
+        setWorkspaces(data.data);
       } catch (error) {
         console.error("Failed to fetch workspaces:", error);
       } finally {
@@ -120,12 +116,21 @@ export default function WorkspacesList() {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   {workspace.description || "No description provided"}
                 </p>
+                <div className="flex gap-2">
                 <Link href={`/dashboard/${workspace.id}`}>                <Button
                   onClick={() => router.push(`/workspace/${workspace.id}`)}
                   className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
                 >
                   Manage Workspace
                 </Button></Link>
+                <Button
+                  onClick={() => router.push(`/workspace/${workspace.id}`)}
+                  className="w-full"
+                >
+                  Add Members
+                </Button>
+                </div>
+
 
               </CardContent>
             </Card>

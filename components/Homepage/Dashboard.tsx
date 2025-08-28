@@ -18,8 +18,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
-import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
+import api from "@/services/api";
 
 type Workspace = {
   id: string;
@@ -63,14 +63,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3001/api/workspace/user",
-          {
-            headers: {
-              Authorization: `Bearer ${access_token}`,
-            },
-          }
-        );
+        const response = await api.get("/workspace/user", {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
         setWorkspaces(response.data.data || []);
         if (response.data.data.length > 0) {
           setActiveWorkspace(response.data.data[0].id);
@@ -91,12 +86,9 @@ const Dashboard = () => {
 
       try {
         setLoading((prev) => ({ ...prev, projects: true }));
-        const response = await axios.get(
-          `http://localhost:3001/api/projects/workspace/${activeWorkspace}`,
-          {
-            headers: { Authorization: `Bearer ${access_token}` },
-          }
-        );
+        const response = await api.get(`/projects/workspace/${activeWorkspace}`, {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
         setProjects(response.data.data);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -115,12 +107,9 @@ const Dashboard = () => {
       try {
         setLoading((prev) => ({ ...prev, issues: true }));
         const projectIds = projects.map((p) => p.id).join(",");
-        const response = await axios.get(
-          `http://localhost:3001/api/issues/project/${projectIds}`,
-          {
-            headers: { Authorization: `Bearer ${access_token}` },
-          }
-        );
+        const response = await api.get(`/issues/project/${projectIds}`, {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
         setIssues(response.data.data);
       } catch (error) {
         console.error("Error fetching issues:", error);

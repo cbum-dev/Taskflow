@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/store/authStore";
+import api from "@/services/api";
 
 interface Member {
   id: string;
@@ -17,7 +17,6 @@ interface AddMemberFormProps {
 }
 
 export default function AddMemberForm({ workspaceId, setMembers }: AddMemberFormProps) {
-  const { access_token } = useAuthStore();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,23 +27,9 @@ export default function AddMemberForm({ workspaceId, setMembers }: AddMemberForm
     setIsLoading(true);
     
     try {
-      const response = await fetch(`http://localhost:3001/api/workspace/${workspaceId}/add-member`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-        body: JSON.stringify({ workspaceId, email }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setMembers(prev => [...prev, data.member]);
-        setEmail("");
-      } else {
-        const error = await response.json();
-        console.error("Error adding member:", error);
-      }
+      const { data } = await api.put(`/workspace/${workspaceId}/add-member`, { email });
+      setMembers(prev => [...prev, data.member]);
+      setEmail("");
     } catch (error) {
       console.error("Error adding member:", error);
     } finally {

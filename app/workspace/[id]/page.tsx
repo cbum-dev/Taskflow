@@ -6,6 +6,8 @@ import { useAuthStore } from "@/store/authStore";
 import AddMemberForm from "@/components/AddMemberForm";
 import { WorkspaceMember } from "@/types/types";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import api from "@/services/api";
 interface Member extends WorkspaceMember {
   email: string;
 }
@@ -23,6 +25,7 @@ export default function WorkspaceDetails() {
   const { user, access_token } = useAuthStore();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const router = useRouter();
 
   const addMember = async (email: string) => {
     if (!user) {
@@ -31,20 +34,9 @@ export default function WorkspaceDetails() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/workspace/${id}/add-member`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-        body: JSON.stringify({ 
-          workspaceId: id, 
-          email: email 
-        }),
-      });
+      const { data } = await api.post(`/workspace/${id}/add-member`, { email });
 
-      if (response.ok) {
-        const newMember = await response.json();
+      if (data) {
         toast("Member added successfully", {
           description: "Yups",
           action: {
@@ -52,7 +44,8 @@ export default function WorkspaceDetails() {
             onClick: () => console.log("Undo"),
           },
         });
-        setMembers([...members, newMember]);
+        setMembers([...members, data.data]);
+        router.push(`/workspace/${id}`);
         return true;
       } else {
         console.log("Error adding member. Try again.");
@@ -74,11 +67,8 @@ export default function WorkspaceDetails() {
   useEffect(() => {
     const fetchWorkspace = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/workspace/${id}`, {
-          headers: { Authorization: `Bearer ${access_token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
+        const { data } = await api.get(`/workspace/${id}`);
+        if (data) {
           setWorkspace(data.data);
           setMembers(data.data.members || []);
         }

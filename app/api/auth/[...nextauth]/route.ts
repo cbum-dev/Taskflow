@@ -2,7 +2,6 @@ import NextAuth, { NextAuthOptions, DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-
 interface AuthUser {
   id: string;
   token: string;
@@ -48,7 +47,7 @@ const authOptions: NextAuthOptions = {
           throw new Error("Missing email or password");
         }
 
-        const res = await fetch("http://localhost:3001/api/user/login", {
+        const res = await fetch("https://taskflow-backend-dkwh.onrender.com/api/user/login", {
           method: "POST",
           body: JSON.stringify(credentials),
           headers: { "Content-Type": "application/json" },

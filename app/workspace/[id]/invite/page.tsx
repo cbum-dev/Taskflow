@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-
+import api from "@/services/api";
 export default function InvitePage() {
   const { id } = useParams();
   const router = useRouter();
@@ -17,16 +17,9 @@ export default function InvitePage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/api/workspace/${id}/add-member`, {
-        method: "PUT",
-        body: JSON.stringify({ workspaceId: id, memberId: user.id }),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-      });
+      const { data } = await api.post(`/workspace/${id}/add-member`, { memberId: user.id });
 
-      if (response.ok) {
+      if (data) {
         router.push(`/workspace/${id}`);
       } else {
         setError("Error joining workspace. Try again.");

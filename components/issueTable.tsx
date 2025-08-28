@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
 import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/authStore";
@@ -77,11 +76,7 @@ export default function IssueTable() {
   const onCheckboxToggle = async (issue: Issue) => {
     const newStatus = issue.status === "DONE" ? "IN_PROGRESS" : "DONE";
     try {
-      await axios.put(
-        `http://localhost:3001/api/issues/${issue.id}`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
+      await api.put(`/issues/${issue.id}`, { status: newStatus });
       socket.emit("issueUpdated", { ...issue, status: newStatus });
       toast("Issue status updated", {
         description: "You can click to start working on your updated issue.",
