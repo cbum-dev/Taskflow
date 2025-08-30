@@ -28,42 +28,39 @@ export default function WorkspaceDetails() {
   const [members, setMembers] = useState<Member[]>([]);
   const router = useRouter();
 
-  const addMember = async (email: string) => {
-    if (!user) {
-      console.log("You must be logged in to add a member.");
-      return;
-    }
+const addMember = async (email: string) => {
+  if (!user) {
+    console.log("You must be logged in to add a member.");
+    return false;
+  }
 
-    try {
-      const { data } = await api.post(`/workspace/${id}/add-member`, { email });
+  try {
+    const { data } = await api.put(`/workspace/${id}/add-member`, { email, workspaceId: id });
 
-      if (data) {
-        toast("Member added successfully", {
-          description: "Yups",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
-        });
-        setMembers([...members, data.data]);
-        router.push(`/workspace/${id}`);
-        return true;
-      } else {
-        console.log("Error adding member. Try again.");
-        toast("Failed to add member", {
-          description: "Please try again later.",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error("Error adding member:", error);
+    if (data) {
+      toast("Member added successfully", {
+        description: "Yups",
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
+
+      setMembers(prev => [...prev, data.user]);
+      return true;
+    } else {
+      toast("Failed to add member", {
+        description: "Please try again later.",
+      });
       return false;
     }
-  };
+  } catch (error) {
+    console.error("Error adding member:", error);
+    toast("Failed to add member");
+    return false;
+  }
+};
+
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -93,16 +90,21 @@ export default function WorkspaceDetails() {
           {workspace.description && <p>{workspace.description}</p>}          
           <h3 className="mt-4 text-lg font-semibold">Add Member</h3>
           <AddMemberForm 
-            workspaceId={id} 
-            // @ts-ignore
             onAddMember={addMember} 
           />
           <h3 className="mt-4 text-lg font-semibold">Members</h3>
           <ul className="list-disc pl-5">
             {members.map((member) => (
-              <li key={member.id}>
-                {member.name} ({member.email})
-              </li>
+                <li
+                  key={member.id}
+                  className="flex items-center justify-between py-2 border-b last:border-b-0"
+                >
+                  <div className="flex items-center">
+                    <span className="mr-2">•</span>
+                    <span className="font-medium">{member.name || "Unknown"}</span>
+                    <span className="text-sm text-gray-500 ml-2">({member.email})</span>
+                  </div>
+                </li>
             ))}
           </ul>
           {members.length === 0 && <p className="mt-2">No members yet.</p>}

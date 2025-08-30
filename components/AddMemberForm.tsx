@@ -1,40 +1,28 @@
-
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import api from "@/services/api";
-
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-}
 
 interface AddMemberFormProps {
-  workspaceId: string;
-  setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
+  onAddMember: (email: string) => Promise<boolean>; // callback
 }
 
-export default function AddMemberForm({ workspaceId, setMembers }: AddMemberFormProps) {
+export default function AddMemberForm({ onAddMember }: AddMemberFormProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    
+
     setIsLoading(true);
-    
-    try {
-      const { data } = await api.put(`/workspace/${workspaceId}/add-member`, { email });
-      setMembers(prev => [...prev, data.member]);
-      setEmail("");
-    } catch (error) {
-      console.error("Error adding member:", error);
-    } finally {
-      setIsLoading(false);
+
+    const success = await onAddMember(email);
+    if (success) {
+      setEmail(""); // clear input after success
     }
+
+    setIsLoading(false);
   };
 
   return (

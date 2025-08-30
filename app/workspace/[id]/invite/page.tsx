@@ -17,7 +17,7 @@ export default function InvitePage() {
         return;
       }
 
-      const { data } = await api.post(`/workspace/${id}/add-member`, { memberId: user.id });
+      const { data } = await api.put(`/workspace/${id}/add-member`, { memberId: user.id, workspaceId: id });
 
       if (data) {
         router.push(`/workspace/${id}`);
