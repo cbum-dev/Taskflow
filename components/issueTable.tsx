@@ -116,7 +116,7 @@ export default function IssueTable({ issues, setIssues }: IssueTableProps) {
           setSortBy={setSortBy}
           setSortOrder={setSortOrder}
         />
-        <div className="overflow-x-auto pb-16 overflow-y-auto max-h-[calc(100vh-250px)] rounded border border-gray-200 dark:border-gray-700 mt-4" style={{
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] rounded border border-gray-200 dark:border-gray-700 mt-4" style={{
           scrollbarWidth: 'thin',
           scrollbarColor: '#CBD5E0 #F7FAFC'
         }}>

@@ -4,7 +4,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full mt-14  h-[90vh] overflow-clip  scrollbar-hide">
+      <main className="w-full h-[95vh] overflow-clip  scrollbar-hide mt-auto">
         <SidebarTrigger />
         {children}
       </main>

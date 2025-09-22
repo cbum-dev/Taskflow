@@ -144,7 +144,7 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
         prompt: aiPrompt,
         projectId: projectId as string,
         workspaceId: workspaceId as string,
-        onSuccess: (count, tasks) => {
+        onSuccess: async (count, tasks) => {
           console.log("AI generation success callback:", { count, tasks });
           
           toast({
@@ -152,17 +152,32 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
             description: `Successfully generated ${count} tasks!`,
             variant: "default",
           });
+          
+          // Close the AI modal and reset the prompt
           setIsAIModalOpen(false);
           setAiPrompt("");
           
-          // Force refresh the issues list by triggering the useEffect
+          // Update the parent's issues list with the new tasks
+          if (tasks && tasks.length > 0) {
+            setIssues(prevIssues => [...prevIssues, ...tasks]);
+          }
+          
+          // Also trigger a full refresh to ensure consistency
           setRefreshKey(prev => prev + 1);
+          
+          // Force a complete refresh of the issues list
+          try {
+            const { data } = await api.get(`/issues/project/${projectId}`);
+            setIssues(data.data || []);
+          } catch (error) {
+            console.error("Error refreshing issues:", error);
+          }
         },
         onError: (error) => {
           console.error("Error generating tasks:", error);
           toast({
             title: "Error",
-            description: "Failed to generate tasks. Please try again.",
+            description: error instanceof Error ? error.message : "Failed to generate tasks. Please try again.",
             variant: "destructive",
           });
         }
