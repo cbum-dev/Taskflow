@@ -44,10 +44,19 @@ export interface Label {
   projectId: string;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email?: string;
+  imageUrl?: string;
+}
+
 export interface Comment {
   id: string;
   content: string;
   authorId: string;
+  isAIGenerated?: boolean;
+  user?: User;
   issueId: string;
   createdAt: string;
   updatedAt: string;

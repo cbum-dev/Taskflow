@@ -30,11 +30,11 @@ import { Calendar } from "./ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarIcon, Plus, Trash2, } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import api from "@/services/api";
 import { WorkspaceMember, Issue, Label, Comment } from "@/types/types";
 import { toast } from "sonner";
-
+import { useSession } from "next-auth/react";
 // Helper to generate a random hex color
 const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
 
@@ -59,7 +59,13 @@ export default function IssueSidebar({
   const [newLabelColor, setNewLabelColor] = useState(getRandomColor());
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const currentUser = { id: "clwbfyzao000011m1115n29xt", name: "You" };
+  const { data: session } = useSession();
+  const currentUser = { 
+    id: session?.user?.id || "", 
+    name: session?.user?.name || "You",
+    email: session?.user?.email || "",
+    imageUrl: session?.user?.image || ""
+  };
   
 
 
@@ -175,15 +181,38 @@ export default function IssueSidebar({
     updateField("labels", newLabels);
   };
 
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+  const handleAddComment = async (content?: string, isAIGenerated: boolean = false) => {
+    const commentContent = content || newComment;
+    if (!commentContent.trim()) return;
+    
+    const commentData: any = { 
+      content: commentContent,
+      userId: currentUser.id,
+      isAIGenerated
+    };
+
     setIsSubmittingComment(true);
     try {
-      const response = await api.post(`/issues/${issue.id}/comments`, { content: newComment });
+      const response = await api.post(`/issues/${issue.id}/comments`, commentData);
       const newCommentData = response.data.data;
-      newCommentData.user = { id: currentUser.id, name: currentUser.name };
-      updateField('comments', [...formData.comments, newCommentData]);
-      setNewComment("");
+      newCommentData.user = { 
+        id: currentUser.id, 
+        name: currentUser.name,
+        imageUrl: currentUser.imageUrl
+      };
+      newCommentData.isAIGenerated = isAIGenerated;
+      
+      updateField('comments', [...(formData.comments || []), newCommentData]);
+      
+      if (!content) {
+        setNewComment("");
+      }
+      
+      // Notify via WebSocket
+      socket.emit("newComment", { 
+        issueId: issue.id, 
+        comment: newCommentData 
+      });
     } catch (e) {
       toast.error("Failed to add comment.");
       console.error("Error adding comment:", e);
@@ -391,21 +420,55 @@ export default function IssueSidebar({
           </div>
         </div>
         <div className="space-y-4">
-          <h3 className="text-base font-semibold">Comments</h3>
-          <div className="space-y-4">
-            {formData.comments?.map((comment: Comment) => (
-              <div key={comment.id} className="flex items-start gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={comment.user?.imageUrl} />
-                  <AvatarFallback>{comment.user?.name.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-sm bg-gray-100 dark:bg-zinc-800 rounded-lg p-3">
-                  <p className="font-semibold">{comment.user?.name}</p>
-                  <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{comment.content}</p>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">Comments</h3>
+            </div>
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {formData.comments?.length > 0 ? (
+                formData.comments.map((comment: Comment) => (
+                  <div 
+                    key={comment.id} 
+                    className={`flex items-start gap-3 group ${comment.isAIGenerated ? 'border-l-2 border-blue-500 pl-3' : ''}`}
+                  >
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarImage src={comment.user?.imageUrl} />
+                      <AvatarFallback>
+                        {comment.isAIGenerated 
+                          ? 'AI' 
+                          : (comment.user?.name || 'U').charAt(0).toUpperCase()
+                        }
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <p className="font-semibold text-sm">
+                            {comment.isAIGenerated ? 'AI Assistant' : comment.user?.name || 'Unknown'}
+                          </p>
+                          {comment.isAIGenerated && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                              AI
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p 
+                        className={`whitespace-pre-wrap break-words text-sm ${comment.isAIGenerated ? 'text-blue-800 dark:text-blue-200' : 'text-gray-600 dark:text-gray-300'}`}
+                      >
+                        {comment.content}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No comments yet. Add the first one!
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
           <div className="flex items-start gap-3 pt-4">
             <Avatar className="h-8 w-8">
               <AvatarFallback>{currentUser.name.charAt(0).toUpperCase()}</AvatarFallback>

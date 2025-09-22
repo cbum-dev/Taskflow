@@ -9,13 +9,14 @@ import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import { Calendar } from "@/components/ui/calendar";
 import { useAuthStore } from "@/store/authStore";
 import { io } from "socket.io-client";
-import { CalendarIcon, FlagIcon, PlusIcon, UserIcon } from "lucide-react";
+import { CalendarIcon, FlagIcon, PlusIcon, UserIcon, Sparkles, Loader2 } from "lucide-react";
 import { Issue } from "@/types/types";
 import { useParams } from "next/dist/client/components/navigation";
 import { toast } from "@/hooks/use-toast";
 import { WorkspaceMember } from "@/types/types";
 import { priorities, statuses } from "@/services/valus";
-import api from "@/services/api";
+import api, { aiService } from "@/services/api";
+import { generateTasksWithAI } from "@/utils/ai";
 
 const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
@@ -31,6 +32,9 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
   });
 
   const [isCreating, setIsCreating] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const { access_token } = useAuthStore();
   const [refreshKey, setRefreshKey] = useState(0);
   const { projectId, workspaceId } = useParams();
@@ -129,14 +133,55 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
     }
   };
 
+  const handleAIGenerateTasks = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    try {
+      setIsGenerating(true);
+      await generateTasksWithAI({
+        prompt: aiPrompt,
+        projectId: projectId as string,
+        workspaceId: workspaceId as string,
+        onSuccess: (count) => {
+          toast({
+            title: "Success",
+            description: `Successfully generated ${count} tasks!`,
+            variant: "default",
+          });
+          setIsAIModalOpen(false);
+          setAiPrompt("");
+          setRefreshKey(prev => prev + 1);
+        },
+        onError: (error) => {
+          console.error("Error generating tasks:", error);
+          toast({
+            title: "Error",
+            description: "Failed to generate tasks. Please try again.",
+            variant: "destructive",
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Error in handleAIGenerateTasks:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
-    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusIcon className="w-4 h-4 mr-2" />
-          New Issue
-        </Button>
-      </DialogTrigger>
+    <div className="flex gap-2">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusIcon className="w-4 h-4 mr-2" />
+            New Issue
+          </Button>
+        </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Issue</DialogTitle>
@@ -265,5 +310,62 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
         </div>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={isAIModalOpen} onOpenChange={setIsAIModalOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Sparkles className="w-4 h-4 mr-2" />
+          AI Generate Tasks
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Generate Tasks with AI</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Describe what you want to achieve
+            </label>
+            <textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="e.g., I want to build a todo app with user authentication..."
+              className="w-full p-2 border rounded-md min-h-[100px] dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              disabled={isGenerating}
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              The AI will generate a set of tasks based on your description.
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAIModalOpen(false)}
+              disabled={isGenerating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAIGenerateTasks}
+              disabled={!aiPrompt.trim() || isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Tasks
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </div>
   );
 }
