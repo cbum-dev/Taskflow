@@ -15,7 +15,7 @@ import { useParams } from "next/dist/client/components/navigation";
 import { toast } from "@/hooks/use-toast";
 import { WorkspaceMember } from "@/types/types";
 import { priorities, statuses } from "@/services/valus";
-import api, { aiService } from "@/services/api";
+import api from "@/services/api";
 import { generateTasksWithAI } from "@/utils/ai";
 
 const socket = io("https://taskflow-backend-dkwh.onrender.com");

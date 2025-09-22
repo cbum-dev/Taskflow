@@ -13,6 +13,7 @@ type AuthState = {
   isAuthenticated: boolean;
   setUser: (user: User, token: string) => void;
   clearUser: () => void;
+  refreshToken?: string | null;
 };
 
 export const useAuthStore = create(
@@ -27,6 +28,7 @@ export const useAuthStore = create(
           access_token: token,
           isAuthenticated: true,
         }),
+      refreshToken: null,
       clearUser: () =>
         set({
           user: null,

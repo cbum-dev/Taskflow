@@ -30,7 +30,7 @@ import { Calendar } from "./ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarIcon, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, } from "lucide-react";
 import api from "@/services/api";
 import { WorkspaceMember, Issue, Label, Comment } from "@/types/types";
 import { toast } from "sonner";
@@ -103,7 +103,7 @@ export default function IssueSidebar({
       Object.keys(formData).forEach((key) => {
         // Special handling for labels to send only IDs
         if (key === 'labels') {
-            const originalLabelIds = new Set(issue.labels.map(l => l.id));
+            const originalLabelIds = new Set(issue.labels?.map(l => l.id));
             const newLabelIds = new Set(formData.labels.map((l: Label) => l.id));
             if (originalLabelIds.size !== newLabelIds.size || ![...originalLabelIds].every(id => newLabelIds.has(id))) {
                 changedFields.labels = formData.labels.map((l: Label) => l.id);
@@ -156,8 +156,10 @@ export default function IssueSidebar({
       setNewLabelName("");
       setNewLabelColor(getRandomColor());
       toast.success(`Label "${newLabel.name}" created.`);
-    } catch (error) {
-      toast.error("Failed to create label.");
+    } catch (error: any) {
+      toast.error("Failed to create label.", {
+        description: error?.response?.data?.error || ''
+      });
     }
   };
 
@@ -168,8 +170,10 @@ export default function IssueSidebar({
       setProjectLabels(prev => prev.filter(l => l.id !== labelId));
       updateField('labels', formData.labels.filter((l: Label) => l.id !== labelId));
       toast.success("Label deleted from project.");
-    } catch (error) {
-      toast.error("Failed to delete label.");
+    } catch (error: any) {
+      toast.error("Failed to delete label.",{
+        description: error?.response?.data?.error || ''
+      });
     }
   };
 
@@ -483,7 +487,7 @@ export default function IssueSidebar({
               <Button
                 size="sm"
                 className="mt-2"
-                onClick={handleAddComment}
+                onClick={() => handleAddComment()}
                 disabled={!newComment.trim() || isSubmittingComment}
               >
                 {isSubmittingComment ? "Commenting..." : "Comment"}

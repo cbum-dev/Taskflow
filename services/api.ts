@@ -65,7 +65,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        // Try to refresh the token
+
         const { refreshToken } = useAuthStore.getState();
         if (refreshToken) {
           const response = await axios.post(
@@ -85,7 +85,7 @@ api.interceptors.response.use(
         }
       } catch (refreshError) {
         // If refresh fails, log the user out
-        useAuthStore.getState().logout();
+        useAuthStore.getState().clearUser();
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }

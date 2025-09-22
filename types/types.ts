@@ -8,6 +8,7 @@ export interface Issue {
   assignee?: string;
   dueDate?: string;
   labels?: Label[];
+  comments?: Comment[];
 }
 export interface Project {
   id: string;
