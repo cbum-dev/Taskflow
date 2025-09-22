@@ -2,7 +2,7 @@ import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 
 const api = axios.create({
-  baseURL: "https://taskflow-backend-dkwh.onrender.com/api",
+  baseURL: "http://localhost:3001/api",
 });
 
 api.interceptors.request.use((config) => {

@@ -7,6 +7,7 @@ export interface Issue {
   projectId: string;
   assignee?: string;
   dueDate?: string;
+  labels?: Label[];
 }
 export interface Project {
   id: string;
@@ -34,4 +35,22 @@ export interface IssueTableProps {
 export interface WorkspaceMember {
   id: string;
   name: string;
+}
+
+export interface Label {
+  id: string;
+  name: string;
+  color: string;
+  projectId: string;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  authorId: string;
+  issueId: string;
+  createdAt: string;
+  updatedAt: string;
+  authorName?: string;
+  authorAvatar?: string;
 }

@@ -267,13 +267,6 @@ const Dashboard = () => {
                 <FileText className="w-5 h-5 mr-2 text-indigo-500" />
                 Active Projects
               </h2>
-              <Link
-                href={`/projects?workspace=${activeWorkspace}`}
-                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center group"
-              >
-                View all projects
-                <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Link>
             </div>
 
             {loading.projects ? (
@@ -297,7 +290,7 @@ const Dashboard = () => {
                 {projects?.map((project) => (
                   <Link
                     key={project.id}
-                    href={`/project/${project.id}`}
+                    href={`/dashboard/${project.id}`}
                     className="group"
                   >
                     <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all duration-200 shadow-sm hover:shadow-md group-hover:-translate-y-1">
@@ -340,7 +333,7 @@ const Dashboard = () => {
                 Recent Issues
               </h2>
               <Link
-                href="/issues"
+                href={`/dashboard/${activeWorkspace}/${projects[0].id}/issues`}
                 className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center group"
               >
                 View all issues

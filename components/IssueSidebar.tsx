@@ -21,82 +21,174 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CalendarIcon } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "./ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CalendarIcon, Plus, Trash2, } from "lucide-react";
 import api from "@/services/api";
-import { WorkspaceMember, Issue } from "@/types/types";
+import { WorkspaceMember, Issue, Label, Comment } from "@/types/types";
 import { toast } from "sonner";
 
-export default function IssueSidebar({ issue, onClose, members, socket }: { issue: Issue; onClose: () => void; members: WorkspaceMember[]; socket: any; }) {
+// Helper to generate a random hex color
+const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
+
+export default function IssueSidebar({
+  issue,
+  onClose,
+  members,
+  socket,
+}: {
+  issue: Issue;
+  onClose: () => void;
+  members: WorkspaceMember[];
+  socket: any;
+}) {
   const [formData, setFormData] = useState<any>({ ...issue });
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // --- NEW STATE FOR LABELS AND COMMENTS ---
+  const [projectLabels, setProjectLabels] = useState<Label[]>([]);
+  const [newLabelName, setNewLabelName] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState(getRandomColor());
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const currentUser = { id: "clwbfyzao000011m1115n29xt", name: "You" };
+  
+
+
+  // --- FETCH PROJECT LABELS ON COMPONENT MOUNT ---
+  useEffect(() => {
+    const fetchProjectLabels = async () => {
+      if (!issue?.projectId) return;
+      try {
+        const response = await api.get(`/projects/${issue.projectId}/labels`);
+        setProjectLabels(response.data.data);
+      } catch (e) {
+        console.error("Failed to fetch project labels", e);
+        toast.error("Could not load project labels.");
+      }
+    };
+    fetchProjectLabels();
+  }, [issue?.projectId]);
 
   useEffect(() => {
-    setFormData({ ...issue });
+    setFormData({ ...issue, comments: issue.comments || [] }); 
     setHasChanges(false);
   }, [issue]);
 
   if (!issue) return null;
 
   const updateField = (field: string, value: any) => {
-    const updated = { ...formData, [field]: value };
-    setFormData(updated);
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
   const saveAllChanges = async () => {
     if (!hasChanges) return;
-
     try {
       const changedFields: { [key: string]: any } = {};
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== issue[key as keyof Issue]) {
+      Object.keys(formData).forEach((key) => {
+        // Special handling for labels to send only IDs
+        if (key === 'labels') {
+            const originalLabelIds = new Set(issue.labels.map(l => l.id));
+            const newLabelIds = new Set(formData.labels.map((l: Label) => l.id));
+            if (originalLabelIds.size !== newLabelIds.size || ![...originalLabelIds].every(id => newLabelIds.has(id))) {
+                changedFields.labels = formData.labels.map((l: Label) => l.id);
+            }
+        } else if (formData[key] !== issue[key as keyof Issue]) {
           changedFields[key] = formData[key];
         }
       });
-
+      
       if (Object.keys(changedFields).length === 0) {
         setHasChanges(false);
         return;
       }
+
       await api.put(`/issues/${issue.id}`, changedFields);
-
       socket.emit("issueUpdated", { id: issue.id, ...changedFields });
-      toast("Issue updated successfully", {
-        description: "You can click to start working on your updated issue.",
-        action: {
-          label: "Close",
-          onClick: () => console.log("Close"),
-        },
-      });
-
+      toast.success("Issue updated successfully!");
       setHasChanges(false);
-      onClose();
+      onClose(); // Optional: close sidebar on successful save
     } catch (e) {
-      toast("Failed to update issue", {
-        description: "Please try again later.",
-        action: {
-          label: "Close",
-          onClick: () => console.log("Close"),
-        },
-      });
+      toast.error("Failed to update issue.");
       console.error(e);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this issue? This action cannot be undone.")) {
-      return;
-    }
-
+    if (!confirm("Are you sure? This will permanently delete this issue.")) return;
     try {
       await api.delete(`/issues/${issue.id}`);
       socket.emit("issueDeleted", { id: issue.id });
       onClose();
     } catch (e) {
+      toast.error("Failed to delete issue.");
       console.error("Error deleting issue:", e);
-      alert("Failed to delete issue. Please try again.");
+    }
+  };
+
+  const handleCreateLabel = async () => {
+    if (!newLabelName.trim()) {
+      toast.warning("Label name cannot be empty.");
+      return;
+    }
+    try {
+      const response = await api.post(`/projects/${issue.projectId}/labels`, {
+        name: newLabelName,
+        color: newLabelColor,
+      });
+      const newLabel = response.data.data;
+      setProjectLabels(prev => [...prev, newLabel]);
+      setNewLabelName("");
+      setNewLabelColor(getRandomColor());
+      toast.success(`Label "${newLabel.name}" created.`);
+    } catch (error) {
+      toast.error("Failed to create label.");
+    }
+  };
+
+  const handleDeleteLabelFromProject = async (labelId: string) => {
+    if (!confirm("Delete this label from the entire project?")) return;
+    try {
+      await api.delete(`/projects/${issue.projectId}/labels/${labelId}`);
+      setProjectLabels(prev => prev.filter(l => l.id !== labelId));
+      updateField('labels', formData.labels.filter((l: Label) => l.id !== labelId));
+      toast.success("Label deleted from project.");
+    } catch (error) {
+      toast.error("Failed to delete label.");
+    }
+  };
+
+  const toggleIssueLabel = (label: Label) => {
+    const isAttached = formData.labels.some((l: Label) => l.id === label.id);
+    const newLabels = isAttached
+      ? formData.labels.filter((l: Label) => l.id !== label.id)
+      : [...formData.labels, label];
+    updateField("labels", newLabels);
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    setIsSubmittingComment(true);
+    try {
+      const response = await api.post(`/issues/${issue.id}/comments`, { content: newComment });
+      const newCommentData = response.data.data;
+      newCommentData.user = { id: currentUser.id, name: currentUser.name };
+      updateField('comments', [...formData.comments, newCommentData]);
+      setNewComment("");
+    } catch (e) {
+      toast.error("Failed to add comment.");
+      console.error("Error adding comment:", e);
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -118,8 +210,7 @@ export default function IssueSidebar({ issue, onClose, members, socket }: { issu
         year: 'numeric',
         month: 'short',
         day: 'numeric'
-      });
-    } catch (error) {
+      });    } catch (error) {
       console.error("Invalid date:", error);
       return 'No date';
     }
@@ -135,7 +226,6 @@ export default function IssueSidebar({ issue, onClose, members, socket }: { issu
       return undefined;
     }
   };
-
   return (
     <Sidebar
       side="right"
@@ -158,7 +248,61 @@ export default function IssueSidebar({ issue, onClose, members, socket }: { issu
             placeholder="Add a description"
           />
         </div>
-
+ <div>
+          <label className="block text-sm font-medium mb-2">Labels</label>
+          <div className="flex flex-wrap items-center gap-2">
+            {formData.labels?.map((label: Label) => (
+              <Badge key={label.id} style={{ backgroundColor: label.color, color: 'white' }} className="text-xs font-semibold">
+                {label.name}
+              </Badge>
+            ))}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="h-6 w-6 rounded-full">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0">
+                <div className="p-4">
+                  <h4 className="font-medium mb-2 text-sm">Manage Labels</h4>
+                  <div className="space-y-2">
+                    {projectLabels.map(label => (
+                      <div key={label.id} className="flex items-center justify-between text-sm">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="form-checkbox h-4 w-4 rounded text-indigo-600"
+                            checked={formData.labels.some((l: Label) => l.id === label.id)}
+                            onChange={() => toggleIssueLabel(label)}
+                          />
+                          <Badge style={{ backgroundColor: label.color, color: 'white' }} className="text-xs font-semibold">
+                            {label.name}
+                          </Badge>
+                        </label>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteLabelFromProject(label.id)}>
+                          <Trash2 className="h-3 w-3 text-red-500" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="border-t dark:border-zinc-700 p-4">
+                  <h4 className="font-medium mb-2 text-sm">Create new label</h4>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={newLabelColor} onChange={e => setNewLabelColor(e.target.value)} className="h-8 w-8 p-1 bg-transparent border rounded" />
+                    <Input
+                      placeholder="New label name..."
+                      value={newLabelName}
+                      onChange={e => setNewLabelName(e.target.value)}
+                      className="h-8"
+                    />
+                    <Button size="sm" onClick={handleCreateLabel}>Create</Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Status</label>
@@ -244,6 +388,44 @@ export default function IssueSidebar({ issue, onClose, members, socket }: { issu
                 {m.name}
               </div>
             ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold">Comments</h3>
+          <div className="space-y-4">
+            {formData.comments?.map((comment: Comment) => (
+              <div key={comment.id} className="flex items-start gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={comment.user?.imageUrl} />
+                  <AvatarFallback>{comment.user?.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-sm bg-gray-100 dark:bg-zinc-800 rounded-lg p-3">
+                  <p className="font-semibold">{comment.user?.name}</p>
+                  <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{comment.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-start gap-3 pt-4">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>{currentUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <Textarea
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                rows={3}
+              />
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={handleAddComment}
+                disabled={!newComment.trim() || isSubmittingComment}
+              >
+                {isSubmittingComment ? "Commenting..." : "Comment"}
+              </Button>
+            </div>
           </div>
         </div>
       </SidebarContent>
