@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { io } from 'socket.io-client'
 import { useAuthStore } from '@/store/authStore'
@@ -14,19 +14,21 @@ const socket = io('https://taskflow-backend-dkwh.onrender.com')
 
 export default function IssuesPage() {
   const { access_token } = useAuthStore()
-  const { projectId, workspaceId } = useParams()
-  const [issues, setIssues] = useState<Issue[]>([])
+  const { projectId } = useParams()
+  const [issues, setIssuesState] = useState<Issue[]>([])
 
-  const fetchIssues = async () => {
+  const setIssues = useCallback((action: React.SetStateAction<Issue[]>) => {
+    setIssuesState(action)
+  }, [])
+
+  const fetchIssues = useCallback(async () => {
     try {
       const { data } = await api.get(`/issues/project/${projectId}`);
       setIssues(data.data || []);
-      console.log(issues)
     } catch (error) {
       console.error('Error fetching issues:', error)
     }
-  }
-
+  }, [projectId, setIssues])
 
   useEffect(() => {
     if (access_token && projectId) {
@@ -48,14 +50,14 @@ export default function IssuesPage() {
       socket.off("issueUpdated")
       socket.off("issueDeleted")
     }
-  }, [access_token, projectId, workspaceId])
+  }, [access_token, projectId, fetchIssues, setIssues])
 
   return (
     <div className="px-6 space-y-4">
       <CreateIssue
         setIssues={setIssues}
       />
-      <IssueTable />
+      <IssueTable issues={issues} setIssues={setIssues} />
     </div>
   )
 }

@@ -138,11 +138,15 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
     
     try {
       setIsGenerating(true);
+      console.log("Starting AI task generation with prompt:", aiPrompt);
+      
       await generateTasksWithAI({
         prompt: aiPrompt,
         projectId: projectId as string,
         workspaceId: workspaceId as string,
-        onSuccess: (count) => {
+        onSuccess: (count, tasks) => {
+          console.log("AI generation success callback:", { count, tasks });
+          
           toast({
             title: "Success",
             description: `Successfully generated ${count} tasks!`,
@@ -150,6 +154,8 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
           });
           setIsAIModalOpen(false);
           setAiPrompt("");
+          
+          // Force refresh the issues list by triggering the useEffect
           setRefreshKey(prev => prev + 1);
         },
         onError: (error) => {

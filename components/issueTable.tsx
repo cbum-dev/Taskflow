@@ -14,10 +14,14 @@ import { toast } from "sonner";
 
 const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
-export default function IssueTable() {
+interface IssueTableProps {
+  issues: Issue[];
+  setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
+}
+
+export default function IssueTable({ issues, setIssues }: IssueTableProps) {
   const { projectId, workspaceId } = useParams();
   const { access_token } = useAuthStore();
-  const [issues, setIssues] = useState<Issue[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -28,11 +32,6 @@ export default function IssueTable() {
 
   useEffect(() => {
     if (!access_token || !projectId || !workspaceId) return;
-
-    api
-      .get(`/issues/project/${projectId}`)
-      .then((res) => setIssues(res.data.data || []))
-      .catch(console.error);
 
     api
       .get(`/workspace/${workspaceId}/members`)
@@ -57,7 +56,7 @@ export default function IssueTable() {
       socket.off("issueUpdated");
       socket.off("issueDeleted");
     };
-  }, [access_token, projectId, workspaceId]);
+  }, [access_token, projectId, workspaceId, setIssues]);
 
   const displayedIssues = useMemo(
     () =>
@@ -99,9 +98,9 @@ export default function IssueTable() {
 
 
   return (
-    <div >
+    <div className="h-full flex">
       <div
-        className={`transition-all duration-300 ${sidebarIssue ? "w-[calc(100%-400px)]" : "w-full"
+        className={`transition-all duration-300 flex flex-col h-full ${sidebarIssue ? "w-[calc(100%-400px)]" : "w-full"
           }`}
       >
         <IssueTableControls
@@ -117,9 +116,12 @@ export default function IssueTable() {
           setSortBy={setSortBy}
           setSortOrder={setSortOrder}
         />
-        <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 mt-4">
+        <div className="overflow-x-auto pb-16 overflow-y-auto max-h-[calc(100vh-250px)] rounded border border-gray-200 dark:border-gray-700 mt-4" style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#CBD5E0 #F7FAFC'
+        }}>
           <table className="min-w-full text-left">
-            <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
+            <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800 z-10">
               <tr>
                 <th className="p-2 w-10"> </th>
                 <th className="p-2">Title</th>
@@ -129,7 +131,7 @@ export default function IssueTable() {
                 <th className="p-2">Due Date</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
               {displayedIssues.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center p-6 text-gray-500">

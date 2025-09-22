@@ -44,12 +44,18 @@ export const generateTasksWithAI = async ({
     if (response.data.success) {
       const { count, tasks, message } = response.data;
       
+      console.log("AI service response:", response.data);
+      console.log("Extracted data:", { count, tasks, message });
+      
       toast.dismiss(loadingToast);
       toast.success(message || `Successfully generated ${count} tasks!`, {
         description: `${count} new tasks have been added to your project`,
       });
       
-      if (onSuccess) onSuccess(count, tasks);
+      if (onSuccess) {
+        console.log("Calling onSuccess with:", { count, tasks });
+        onSuccess(count, tasks);
+      }
       return tasks;
     } else {
       throw new Error(response.data.error || 'Failed to generate tasks');
