@@ -12,16 +12,17 @@ import { toast } from 'sonner';
 interface KanbanBoardProps {
   issues: Issue[];
   onUpdateIssues: (issues: Issue[]) => void;
+  className?: string;
 }
 
 const statuses = [
-  { id: 'TODO', title: 'To Do', color: 'bg-gray-200' },
-  { id: 'IN_PROGRESS', title: 'In Progress', color: 'bg-blue-200' },
-  { id: 'IN_REVIEW', title: 'In Review', color: 'bg-yellow-200' },
-  { id: 'DONE', title: 'Done', color: 'bg-green-200' },
+  { id: 'TODO', title: 'To Do', color: 'bg-gray-100 dark:bg-neutral-600 dark:text-white' },
+  { id: 'IN_PROGRESS', title: 'In Progress', color: 'bg-blue-100 dark:bg-blue-900 dark:text-white' },
+  { id: 'IN_REVIEW', title: 'In Review', color: 'bg-yellow-100 dark:bg-yellow-900 dark:text-white' },
+  { id: 'DONE', title: 'Done', color: 'bg-green-100 dark:bg-green-900 dark:text-white' },
 ];
 
-export default function KanbanBoard({ issues, onUpdateIssues }: KanbanBoardProps) {
+export default function KanbanBoard({ issues, onUpdateIssues, className = '' }: KanbanBoardProps) {
   const { access_token } = useAuthStore();
 
   const onDragEnd = async (result: DropResult) => {
@@ -69,9 +70,11 @@ export default function KanbanBoard({ issues, onUpdateIssues }: KanbanBoardProps
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {statuses.map(status => (
-          <div key={status.id} className="flex-shrink-0 w-80">
+      <div className={`h-full flex flex-col ${className}`}>
+        <div className="flex-1 overflow-x-auto overflow-y-hidden">
+          <div className="flex gap-4 h-full">
+            {statuses.map(status => (
+              <div key={status.id} className="flex-1 min-w-[250px] max-w-[400px] flex flex-col h-full">
             <div className={`${status.color} p-2 rounded-t-lg`}>
               <h3 className="font-medium text-center">{status.title}</h3>
             </div>
@@ -80,7 +83,7 @@ export default function KanbanBoard({ issues, onUpdateIssues }: KanbanBoardProps
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="bg-gray-50 dark:bg-gray-800 p-2 rounded-b-lg min-h-[500px]"
+                  className="bg-gray-50 dark:bg-neutral-800 p-2 rounded-b-lg flex-1 overflow-y-auto min-h-[500px]"
                 >
                   {getIssuesByStatus(status.id).map((issue, index) => (
                     <Draggable key={issue.id} draggableId={issue.id} index={index}>
@@ -124,8 +127,10 @@ export default function KanbanBoard({ issues, onUpdateIssues }: KanbanBoardProps
                 </div>
               )}
             </Droppable>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </DragDropContext>
   );

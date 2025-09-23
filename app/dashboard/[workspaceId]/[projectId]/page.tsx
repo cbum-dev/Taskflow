@@ -1,91 +1,94 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
-import { io } from 'socket.io-client'
-import { useAuthStore } from '@/store/authStore'
-import IssueTable from '@/components/issueTable'
-import KanbanBoard from '@/components/KanbanBoard'
-import CreateIssue from '@/components/CreateIssuesForm'
-import { Issue } from '@/types/types'
-import api from '@/services/api'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { 
-  LayoutGrid, 
-  Table, 
-  Plus, 
-  Filter, 
+import React, { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
+import { io } from "socket.io-client";
+import { useAuthStore } from "@/store/authStore";
+import IssueTable from "@/components/issueTable";
+import KanbanBoard from "@/components/KanbanBoard";
+import CreateIssue from "@/components/CreateIssuesForm";
+import { Issue } from "@/types/types";
+import api from "@/services/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  LayoutGrid,
+  Table,
+  Plus,
+  Filter,
   Search,
   TrendingUp,
   Clock,
   CheckCircle2,
   AlertCircle,
-  Users
-} from 'lucide-react'
-import { Input } from '@/components/ui/input'
+  Users,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 
-const socket = io('https://taskflow-backend-dkwh.onrender.com')
+const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
 export default function IssuesPage() {
-  const { access_token } = useAuthStore()
-  const { projectId } = useParams()
-  const [issues, setIssuesState] = useState<Issue[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [view, setView] = useState<'table' | 'kanban'>('table')
+  const { access_token } = useAuthStore();
+  const { projectId } = useParams();
+  const [issues, setIssuesState] = useState<Issue[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [view, setView] = useState<"table" | "kanban">("table");
 
   const setIssues = useCallback((action: React.SetStateAction<Issue[]>) => {
-    setIssuesState(action)
-  }, [])
+    setIssuesState(action);
+  }, []);
 
   const fetchIssues = useCallback(async () => {
     try {
       const { data } = await api.get(`/issues/project/${projectId}`);
       setIssues(data.data || []);
     } catch (error) {
-      console.error('Error fetching issues:', error)
+      console.error("Error fetching issues:", error);
     }
-  }, [projectId, setIssues])
+  }, [projectId, setIssues]);
 
   useEffect(() => {
     if (access_token && projectId) {
-      fetchIssues()
+      fetchIssues();
     }
 
     socket.on("issueUpdated", (updatedIssue) => {
-      setIssues(prev => prev.map(issue =>
-        issue.id === updatedIssue.id ? updatedIssue : issue
-      ))
-    })
+      setIssues((prev) =>
+        prev.map((issue) =>
+          issue.id === updatedIssue.id ? updatedIssue : issue
+        )
+      );
+    });
 
     socket.on("issueDeleted", (deletedId) => {
-      setIssues(prev => prev.filter(issue => issue.id !== deletedId))
-    })
+      setIssues((prev) => prev.filter((issue) => issue.id !== deletedId));
+    });
 
     return () => {
-      socket.off("issueCreated")
-      socket.off("issueUpdated")
-      socket.off("issueDeleted")
-    }
-  }, [access_token, projectId, fetchIssues, setIssues])
+      socket.off("issueCreated");
+      socket.off("issueUpdated");
+      socket.off("issueDeleted");
+    };
+  }, [access_token, projectId, fetchIssues, setIssues]);
 
   // Statistics
   const stats = {
     total: issues.length,
-    todo: issues.filter(i => i.status === 'TODO').length,
-    inProgress: issues.filter(i => i.status === 'IN_PROGRESS').length,
-    inReview: issues.filter(i => i.status === 'IN_REVIEW').length,
-    done: issues.filter(i => i.status === 'DONE').length,
-    highPriority: issues.filter(i => i.priority === 'HIGH').length,
-    assigned: issues.filter(i => i.assignee).length,
-  }
+    todo: issues.filter((i) => i.status === "TODO").length,
+    inProgress: issues.filter((i) => i.status === "IN_PROGRESS").length,
+    inReview: issues.filter((i) => i.status === "IN_REVIEW").length,
+    done: issues.filter((i) => i.status === "DONE").length,
+    highPriority: issues.filter((i) => i.priority === "HIGH").length,
+    assigned: issues.filter((i) => i.assignee).length,
+  };
 
-  const completionRate = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
+  const completionRate =
+    stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen w-full ">
       <div className="px-6 space-y-4">
         {/* Header Section */}
         <div className="p-2">
@@ -98,7 +101,7 @@ export default function IssuesPage() {
                 Manage and track your project tasks efficiently
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <CreateIssue setIssues={setIssues} />
             </div>
@@ -114,8 +117,12 @@ export default function IssuesPage() {
                   <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.total}</p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Total Issues</p>
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {stats.total}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                    Total Issues
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -128,8 +135,12 @@ export default function IssuesPage() {
                   <Clock className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.todo}</p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">To Do</p>
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {stats.todo}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                    To Do
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -142,8 +153,12 @@ export default function IssuesPage() {
                   <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.inProgress}</p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">In Progress</p>
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {stats.inProgress}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                    In Progress
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -156,8 +171,12 @@ export default function IssuesPage() {
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.done}</p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Completed</p>
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {stats.done}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                    Completed
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -170,8 +189,12 @@ export default function IssuesPage() {
                   <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.highPriority}</p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">High Priority</p>
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {stats.highPriority}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                    High Priority
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -185,8 +208,12 @@ export default function IssuesPage() {
                     <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{completionRate}%</p>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Complete</p>
+                    <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {completionRate}%
+                    </p>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                      Complete
+                    </p>
                   </div>
                 </div>
               </div>
@@ -195,24 +222,24 @@ export default function IssuesPage() {
         </div>
 
         {/* Tabs Section */}
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-          <Tabs 
-            value={view} 
-            onValueChange={(value) => setView(value as 'table' | 'kanban')}
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-700 overflow-hidden w-full">
+          <Tabs
+            value={view}
+            onValueChange={(value) => setView(value as "table" | "kanban")}
             className="w-full"
           >
             <div className="border-b border-neutral-200 dark:border-neutral-700 px-6 py-4">
               <div className="flex items-center justify-between">
                 <TabsList className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-600 p-1">
-                  <TabsTrigger 
-                    value="table" 
+                  <TabsTrigger
+                    value="table"
                     className="gap-2 data-[state=active]:bg-neutral-900 data-[state=active]:text-white dark:data-[state=active]:bg-neutral-100 dark:data-[state=active]:text-neutral-900"
                   >
                     <Table className="w-4 h-4" />
                     Table View
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="kanban" 
+                  <TabsTrigger
+                    value="kanban"
                     className="gap-2 data-[state=active]:bg-neutral-900 data-[state=active]:text-white dark:data-[state=active]:bg-neutral-100 dark:data-[state=active]:text-neutral-900"
                   >
                     <LayoutGrid className="w-4 h-4" />
@@ -221,15 +248,30 @@ export default function IssuesPage() {
                 </TabsList>
 
                 <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="bg-neutral-200 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-300">
+                  <Badge
+                    variant="secondary"
+                    className="bg-neutral-200 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
+                  >
                     {issues.length} issues
                   </Badge>
-                  <Badge 
-                    variant="secondary" 
+                  <Badge
+                    variant="secondary"
                     className={`
-                      ${completionRate >= 75 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : ''}
-                      ${completionRate >= 50 && completionRate < 75 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''}
-                      ${completionRate < 50 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : ''}
+                      ${
+                        completionRate >= 75
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                          : ""
+                      }
+                      ${
+                        completionRate >= 50 && completionRate < 75
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                          : ""
+                      }
+                      ${
+                        completionRate < 50
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          : ""
+                      }
                     `}
                   >
                     {completionRate}% Complete
@@ -239,20 +281,26 @@ export default function IssuesPage() {
             </div>
 
             <TabsContent value="table" className="m-0">
-              <div className="p-6">
-                <IssueTable issues={issues} setIssues={setIssues} workspaceMembers={[]} />
+              <div className="p-4 h-[calc(100vh-350px)] min-h-[500px]">
+                <IssueTable
+                  issues={issues}
+                  setIssues={setIssues}
+                  workspaceMembers={[]}
+                />
               </div>
             </TabsContent>
-
-            <TabsContent value="kanban" className="m-0 p-0">
-              <KanbanBoard
-                issues={issues}
-                onUpdateIssues={setIssues}
-              />
+            <TabsContent value="kanban" className="m-0 h-[calc(100vh-350px)] min-h-[500px]">
+              <div className="p-4 h-full">
+                <KanbanBoard 
+                  issues={issues} 
+                  onUpdateIssues={setIssues} 
+                  // className="h-full"
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
       </div>
     </div>
-  )
+  );
 }
