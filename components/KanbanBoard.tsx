@@ -1,13 +1,19 @@
 'use client';
 
-import React from 'react';
-import { Issue, Status } from '@/types/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { Issue } from '@/types/types';
+import { Card, CardContent } from '@/components/ui/card';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Button } from './ui/button';
 import { useAuthStore } from '@/store/authStore';
-import { updateIssueStatus } from '@/services/api';
+import api, { updateIssueStatus } from '@/services/api';
 import { toast } from 'sonner';
+import IssueSidebar from './IssueSidebar';
+import { X } from 'lucide-react';
+import { io } from 'socket.io-client';
+import { useParams } from 'next/navigation';
+
+const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
 interface KanbanBoardProps {
   issues: Issue[];
@@ -24,114 +30,160 @@ const statuses = [
 
 export default function KanbanBoard({ issues, onUpdateIssues, className = '' }: KanbanBoardProps) {
   const { access_token } = useAuthStore();
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { projectId, workspaceId } = useParams();
+  const [workspaceMembers, setWorkspaceMembers] = useState([]);
+
+  useEffect(() => {
+    if (!access_token || !projectId || !workspaceId) return;
+
+    api
+      .get(`/workspace/${workspaceId}/members`)
+      .then((res) => setWorkspaceMembers(res.data.data || []))
+      .catch(console.error);
+
+    return () => {
+      socket.off("issueCreated");
+      socket.off("issueUpdated");
+      socket.off("issueDeleted");
+    };
+  }, [access_token, projectId, workspaceId]);
 
   const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
 
-    // Dropped outside the list or no change in position
     if (!destination || (source.droppableId === destination.droppableId && source.index === destination.index)) {
       return;
     }
 
     try {
-      // Find the issue that was moved
       const issue = issues.find(issue => issue.id === draggableId);
       if (!issue) return;
 
-      // Optimistically update the UI
-      const updatedIssues = issues.map(i => 
-        i.id === issue.id ? { ...i, status: destination.droppableId as Status } : i
+      const updatedIssues = issues.map(i =>
+        i.id === issue.id ? { ...i, status: destination.droppableId as any } : i
       );
-      
-      // Update local state immediately for instant feedback
+
       onUpdateIssues(updatedIssues);
 
-      // Only make API call if status changed
       if (source.droppableId !== destination.droppableId) {
-        await updateIssueStatus(issue.id, destination.droppableId as Status, access_token);
-        
-        // Show success message
+        await updateIssueStatus(issue.id, destination.droppableId as any, access_token as string);
         toast.success('Task status updated successfully');
       }
     } catch (error) {
       console.error('Error updating issue status:', error);
-      
-      // Revert the UI on error
       onUpdateIssues([...issues]);
-      
-      // Show error message
       toast.error('Failed to update task status. Please try again.');
     }
   };
 
-  const getIssuesByStatus = (statusId: string) => {
-    return issues.filter(issue => issue.status === statusId);
+  const getIssuesByStatus = (statusId: string) => issues.filter(issue => issue.status === statusId);
+
+  const handleIssueClick = (issue: Issue) => {
+    setSelectedIssue(issue);
+    setIsSidebarOpen(true);
   };
 
+  const handleCloseSidebar = () => setIsSidebarOpen(false);
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <div className={`h-full flex ${isSidebarOpen ? 'pr-[400px]' : ''} relative transition-all duration-300`}>
       <div className={`h-full flex flex-col ${className}`}>
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="flex gap-4 h-full">
-            {statuses.map(status => (
-              <div key={status.id} className="flex-1 min-w-[250px] max-w-[400px] flex flex-col h-full">
-            <div className={`${status.color} p-2 rounded-t-lg`}>
-              <h3 className="font-medium text-center">{status.title}</h3>
-            </div>
-            <Droppable droppableId={status.id}>
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="bg-gray-50 dark:bg-neutral-800 p-2 rounded-b-lg flex-1 overflow-y-auto min-h-[500px]"
-                >
-                  {getIssuesByStatus(status.id).map((issue, index) => (
-                    <Draggable key={issue.id} draggableId={issue.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="mb-2"
-                        >
-                          <Card className="hover:shadow-md transition-shadow">
-                            <CardHeader className="p-4 pb-2">
-                              <CardTitle className="text-sm font-medium line-clamp-2">
-                                {issue.title}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-0 text-xs text-gray-500">
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs text-muted-foreground">
-                                  {issue.assignee?.name || 'Unassigned'}
-                                </span>
-                                {issue.priority && (
-                                  <span 
-                                    className={`px-2 py-1 rounded-full text-xs ${
-                                      issue.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                                      issue.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-green-100 text-green-800'
-                                    }`}
-                                  >
-                                    {issue.priority.charAt(0) + issue.priority.slice(1).toLowerCase()}
-                                  </span>
-                                )}
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex-1 overflow-x-auto overflow-y-hidden h-full">
+            <div className="flex gap-4 h-full">
+              {statuses.map(status => (
+                <div key={status.id} className="flex-1 min-w-[280px] max-w-[600px] flex flex-col h-full">
+                  <div className={`${status.color} p-2 rounded-t-lg`}>
+                    <h3 className="font-medium text-center">{status.title}</h3>
+                  </div>
+                  <Droppable droppableId={status.id}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="bg-gray-50 dark:bg-neutral-800 p-2 rounded-b-lg flex-1 overflow-y-auto min-h-[500px]"
+                      >
+                        {getIssuesByStatus(status.id).map((issue, index) => (
+                          <Draggable key={issue.id} draggableId={issue.id} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="mb-2"
+                              >
+                                <div
+                                  className="cursor-pointer hover:shadow-md transition-shadow"
+                                  onClick={() => handleIssueClick(issue)}
+                                >
+                                  <Card>
+                                    <CardContent className="p-3">
+                                      <div className="flex justify-between items-start">
+                                        <h4 className="font-medium text-sm line-clamp-2">{issue.title}</h4>
+                                        {issue.priority && (
+                                          <span
+                                            className={`px-2 py-0.5 rounded-full text-xs ${
+                                              issue.priority === 'HIGH'
+                                                ? 'bg-red-100 text-red-800'
+                                                : issue.priority === 'MEDIUM'
+                                                ? 'bg-yellow-100 text-yellow-800'
+                                                : 'bg-green-100 text-green-800'
+                                            }`}
+                                          >
+                                            {issue.priority.charAt(0) + issue.priority.slice(1).toLowerCase()}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {issue.assignee && (
+                                        <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                                          <span className="truncate">
+                                            {/* @ts-ignore */}
+                                            {issue.assignee.name || 'Unassigned'}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </CardContent>
+                                  </Card>
+                                </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
                 </div>
-              )}
-            </Droppable>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </DragDropContext>
       </div>
-    </DragDropContext>
+
+      {isSidebarOpen && selectedIssue && (
+        <div className="fixed right-0 top-0 h-full w-[400px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 overflow-y-auto z-50">
+          <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold">Issue Details</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCloseSidebar}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          <IssueSidebar
+            issue={selectedIssue}
+            onClose={handleCloseSidebar}
+            members={workspaceMembers}
+            socket={socket}
+          />
+        </div>
+      )}
+    </div>
   );
 }

@@ -12,20 +12,15 @@ import api from "@/services/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   LayoutGrid,
   Table,
-  Plus,
-  Filter,
-  Search,
   TrendingUp,
   Clock,
   CheckCircle2,
   AlertCircle,
   Users,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 
 const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
@@ -33,7 +28,6 @@ export default function IssuesPage() {
   const { access_token } = useAuthStore();
   const { projectId } = useParams();
   const [issues, setIssuesState] = useState<Issue[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState<"table" | "kanban">("table");
 
   const setIssues = useCallback((action: React.SetStateAction<Issue[]>) => {
@@ -285,7 +279,6 @@ export default function IssuesPage() {
                 <IssueTable
                   issues={issues}
                   setIssues={setIssues}
-                  workspaceMembers={[]}
                 />
               </div>
             </TabsContent>
