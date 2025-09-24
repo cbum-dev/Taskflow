@@ -119,7 +119,7 @@ export default function WorkspacesList() {
                 <div className="flex gap-2">
                 <Link href={`/dashboard/${workspace.id}`}>                <Button
                   onClick={() => router.push(`/workspace/${workspace.id}`)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                  className="w-full dark:text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
                 >
                   Manage Workspace
                 </Button></Link>

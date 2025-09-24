@@ -506,7 +506,7 @@ export default function IssueSidebar({
           Delete
         </Button>
         <Button
-          className={`flex-1 ${hasChanges ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+          className={`flex-1 ${hasChanges ? 'bg-blue-600 hover:bg-blue-700 dark:text-white' : ''}`}
           onClick={saveAllChanges}
           disabled={!hasChanges}
         >

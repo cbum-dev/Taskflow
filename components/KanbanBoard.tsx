@@ -4,12 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { Issue } from '@/types/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Button } from './ui/button';
 import { useAuthStore } from '@/store/authStore';
 import api, { updateIssueStatus } from '@/services/api';
 import { toast } from 'sonner';
 import IssueSidebar from './IssueSidebar';
-import { X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useParams } from 'next/navigation';
 
