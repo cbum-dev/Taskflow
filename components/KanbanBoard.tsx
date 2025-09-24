@@ -163,26 +163,14 @@ export default function KanbanBoard({ issues, onUpdateIssues, className = '' }: 
       </div>
 
       {isSidebarOpen && selectedIssue && (
-        <div className="fixed right-0 top-0 h-full w-[400px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 overflow-y-auto z-50">
-          <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold">Issue Details</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCloseSidebar}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
+        // <div className="fixed right-0 top-0 h-full w-[400px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 overflow-y-auto z-50">
           <IssueSidebar
             issue={selectedIssue}
             onClose={handleCloseSidebar}
             members={workspaceMembers}
             socket={socket}
           />
-        </div>
+        // </div>
       )}
     </div>
   );

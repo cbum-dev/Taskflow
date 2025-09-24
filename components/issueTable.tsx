@@ -216,15 +216,12 @@ export default function IssueTable({ issues, setIssues }: IssueTableProps) {
       </div>
 
       {sidebarIssue && (
-        <div className="fixed bottom-0 inset-y-0 right-0 w-[350px] z-50 bg-white dark:bg-gray-900 shadow-lg border-l border-gray-200 dark:border-gray-700">
-
           <IssueSidebar
             issue={sidebarIssue}
             onClose={() => setSidebarIssue(null)}
             members={workspaceMembers}
             socket={socket}
           />
-        </div>
       )}
 
     </div>

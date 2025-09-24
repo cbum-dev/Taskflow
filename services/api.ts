@@ -30,7 +30,7 @@ export interface AIHealthResponse {
 }
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://taskflow-backend-dkwh.onrender.com/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api",
   timeout: 45000, // Increased timeout for AI operations
 });
 
@@ -69,7 +69,7 @@ api.interceptors.response.use(
         const { refreshToken } = useAuthStore.getState();
         if (refreshToken) {
           const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL || 'https://taskflow-backend-dkwh.onrender.com/api'}/auth/refresh-token`,
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/refresh-token`,
             { refreshToken }
           );
           
