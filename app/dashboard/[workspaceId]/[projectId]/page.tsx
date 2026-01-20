@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/authStore";
 import IssueTable from "@/components/issueTable";
 import KanbanBoard from "@/components/KanbanBoard";
@@ -21,8 +20,8 @@ import {
   AlertCircle,
   Users,
 } from "lucide-react";
-
-const socket = io("https://taskflow-backend-dkwh.onrender.com");
+import { socketInstance as socket } from "@/lib/socket";
+import { normalizeIssue, upsertIssue } from "@/components/utils";
 
 export default function IssuesPage() {
   const { access_token } = useAuthStore();
@@ -37,7 +36,8 @@ export default function IssuesPage() {
   const fetchIssues = useCallback(async () => {
     try {
       const { data } = await api.get(`/issues/project/${projectId}`);
-      setIssues(data.data || []);
+      const normalizedIssues = (data.data || []).map((issue: Issue) => normalizeIssue(issue));
+      setIssues(normalizedIssues);
     } catch (error) {
       console.error("Error fetching issues:", error);
     }
@@ -48,16 +48,21 @@ export default function IssuesPage() {
       fetchIssues();
     }
 
-    socket.on("issueUpdated", (updatedIssue) => {
+    socket.on("issueCreated", (newIssue: Issue) => {
+      setIssues((prev) => upsertIssue(prev, newIssue));
+    });
+
+    socket.on("issueUpdated", (updatedIssue: Issue) => {
       setIssues((prev) =>
         prev.map((issue) =>
-          issue.id === updatedIssue.id ? updatedIssue : issue
+          issue.id === updatedIssue.id ? normalizeIssue(updatedIssue) : issue
         )
       );
     });
 
-    socket.on("issueDeleted", (deletedId) => {
-      setIssues((prev) => prev.filter((issue) => issue.id !== deletedId));
+    socket.on("issueDeleted", (deletedId: string | Issue) => {
+      const id = typeof deletedId === "object" ? deletedId.id : deletedId;
+      setIssues((prev) => prev.filter((issue) => issue.id !== id));
     });
 
     return () => {

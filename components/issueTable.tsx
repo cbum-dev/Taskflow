@@ -2,17 +2,15 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { io } from "socket.io-client";
+import { socketInstance as socket } from "@/lib/socket";
 import { useAuthStore } from "@/store/authStore";
-import { filterAndSortIssues } from "./utils";
+import { filterAndSortIssues, normalizeIssue, upsertIssue } from "./utils";
 import IssueSidebar from "./IssueSidebar";
 import IssueTableControls from "./IssueTableControls";
 import { Checkbox } from "@/components/ui/checkbox";
 import api from "@/services/api";
 import { Issue } from "@/types/types";
 import { toast } from "sonner";
-
-const socket = io("https://taskflow-backend-dkwh.onrender.com");
 
 interface IssueTableProps {
   issues: Issue[];
@@ -38,8 +36,8 @@ export default function IssueTable({ issues, setIssues }: IssueTableProps) {
       .then((res) => setWorkspaceMembers(res.data.data || []))
       .catch(console.error);
 
-    socket.on("issueCreated", (newIssue) =>
-      setIssues((prev) => [newIssue, ...prev])
+    socket.on("issueCreated", (newIssue: Issue) =>
+      setIssues((prev) => upsertIssue(prev, normalizeIssue(newIssue)))
     );
     socket.on("issueUpdated", (updatedIssue) =>
       setIssues((prev) => prev.map((i) => (i.id === updatedIssue.id ? updatedIssue : i)))

@@ -88,3 +88,44 @@ export function isOverdue(
   if (!dueDate || status === "DONE") return false;
   return new Date(dueDate) < new Date();
 }
+
+export const getIssueId = (issue: any): string | null => {
+  if (!issue) return null;
+  const id = issue.id ?? issue._id ?? issue.issueId ?? issue.ID ?? null;
+  return id != null ? String(id) : null;
+};
+
+export const normalizeIssue = (issue: any): Issue => {
+  const id = getIssueId(issue);
+  return {
+    ...issue,
+    id: id ?? issue.id,
+  };
+};
+
+export const upsertIssue = (existingIssues: Issue[], incomingIssue: Issue): Issue[] => {
+  const normalizedIncoming = normalizeIssue(incomingIssue);
+  const incomingId = getIssueId(normalizedIncoming);
+  if (!incomingId) {
+    return [normalizedIncoming, ...existingIssues];
+  }
+
+  const nextIssues = existingIssues.map((issue) => normalizeIssue(issue));
+  const existingIndex = nextIssues.findIndex((issue) => getIssueId(issue) === incomingId);
+
+  if (existingIndex !== -1) {
+    const updated = [...nextIssues];
+    updated[existingIndex] = {
+      ...updated[existingIndex],
+      ...normalizedIncoming,
+      id: incomingId,
+    };
+    return updated;
+  }
+
+  return [normalizedIncoming, ...nextIssues];
+};
+
+export const mergeIssuesList = (existingIssues: Issue[], incomingIssues: Issue[]): Issue[] => {
+  return incomingIssues.reduce((acc, issue) => upsertIssue(acc, issue), existingIssues);
+};

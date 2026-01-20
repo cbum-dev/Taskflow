@@ -10,7 +10,7 @@ import { PlusIcon, FolderIcon, ChevronDownIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
-import { io } from "socket.io-client";
+import { socketInstance as socket } from "@/lib/socket";
 import {toast} from "sonner";
 import api from '@/services/api'
 interface Workspace {
@@ -25,7 +25,6 @@ interface Project {
   workspaceId: string;
 }
 
-const socket = io('https://taskflow-backend-dkwh.onrender.com')
 export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()

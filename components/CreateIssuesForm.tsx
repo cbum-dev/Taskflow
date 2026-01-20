@@ -8,7 +8,6 @@ import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import { Calendar } from "@/components/ui/calendar";
 import { useAuthStore } from "@/store/authStore";
-import { io } from "socket.io-client";
 import { CalendarIcon, FlagIcon, PlusIcon, UserIcon, Sparkles, Loader2 } from "lucide-react";
 import { Issue } from "@/types/types";
 import { useParams } from "next/dist/client/components/navigation";
@@ -17,8 +16,8 @@ import { WorkspaceMember } from "@/types/types";
 import { priorities, statuses } from "@/services/valus";
 import api from "@/services/api";
 import { generateTasksWithAI } from "@/utils/ai";
-
-const socket = io("https://taskflow-backend-dkwh.onrender.com");
+import { mergeIssuesList, normalizeIssue, upsertIssue } from "@/components/utils";
+import { socketInstance as socket } from "@/lib/socket";
 
 export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<React.SetStateAction<Issue[]>> }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,7 +42,7 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
     const fetchIssues = async () => {
       try {
         const { data } = await api.get(`/issues/project/${projectId}`);
-        const formattedIssues = (data.data || []).map((issue: Issue) => ({
+        const formattedIssues = (data.data || []).map((issue: Issue) => normalizeIssue({
           ...issue,
           status: issue.status || 'TODO',
           priority: issue.priority || 'MEDIUM',
@@ -66,7 +65,7 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
     });
 
     socket.on("issueCreated", (newIssue: Issue) => {
-      setIssues((prevIssues) => [newIssue, ...prevIssues]);
+      setIssues((prevIssues) => upsertIssue(prevIssues, newIssue));
     });
 
     const fetchWorkspaceMembers = async () => {
@@ -96,7 +95,7 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
         reporterId: useAuthStore.getState().user?.id
       });
 
-      const formattedIssue = {
+      const formattedIssue = normalizeIssue({
         ...data,
         status: data.status || 'TODO',
         priority: data.priority || 'MEDIUM',
@@ -104,9 +103,9 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
         description: data.description || '',
         assignee: data.assignee || null,
         dueDate: data.dueDate || null
-      };
+      });
 
-      setIssues(prev => [formattedIssue, ...prev]);
+      setIssues((prev) => upsertIssue(prev, formattedIssue));
 
       setRefreshKey(prev => prev + 1);
 
@@ -159,7 +158,7 @@ export default function CreateIssue({ setIssues }: { setIssues: React.Dispatch<R
           
           // Update the parent's issues list with the new tasks
           if (tasks && tasks.length > 0) {
-            setIssues(prevIssues => [...prevIssues, ...tasks]);
+            setIssues(prevIssues => mergeIssuesList(prevIssues, tasks));
           }
           
           // Also trigger a full refresh to ensure consistency

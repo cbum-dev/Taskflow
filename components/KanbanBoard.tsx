@@ -8,14 +8,13 @@ import { useAuthStore } from '@/store/authStore';
 import api, { updateIssueStatus } from '@/services/api';
 import { toast } from 'sonner';
 import IssueSidebar from './IssueSidebar';
-import { io } from 'socket.io-client';
 import { useParams } from 'next/navigation';
-
-const socket = io("https://taskflow-backend-dkwh.onrender.com");
+import { socketInstance as socket } from '@/lib/socket';
+import { normalizeIssue, upsertIssue } from './utils';
 
 interface KanbanBoardProps {
   issues: Issue[];
-  onUpdateIssues: (issues: Issue[]) => void;
+  onUpdateIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
   className?: string;
 }
 
@@ -41,12 +40,29 @@ export default function KanbanBoard({ issues, onUpdateIssues, className = '' }: 
       .then((res) => setWorkspaceMembers(res.data.data || []))
       .catch(console.error);
 
+    const handleIssueCreated = (newIssue: Issue) => {
+      onUpdateIssues(prev => upsertIssue(prev, normalizeIssue(newIssue)));
+    };
+
+    const handleIssueUpdated = (updatedIssue: Issue) => {
+      onUpdateIssues(prev => prev.map(issue => issue.id === updatedIssue.id ? normalizeIssue(updatedIssue) : issue));
+    };
+
+    const handleIssueDeleted = (deleted: string | Issue) => {
+      const id = typeof deleted === 'object' ? deleted.id : deleted;
+      onUpdateIssues(prev => prev.filter(issue => issue.id !== id));
+    };
+
+    socket.on('issueCreated', handleIssueCreated);
+    socket.on('issueUpdated', handleIssueUpdated);
+    socket.on('issueDeleted', handleIssueDeleted);
+
     return () => {
       socket.off("issueCreated");
       socket.off("issueUpdated");
       socket.off("issueDeleted");
     };
-  }, [access_token, projectId, workspaceId]);
+  }, [access_token, projectId, workspaceId, onUpdateIssues]);
 
   const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
